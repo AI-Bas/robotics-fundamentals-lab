@@ -1,0 +1,4 @@
+pmw3901
+gpiod
+gpiodevice
+spidev
