@@ -1,75 +1,72 @@
-# Next Chat Handoff (Hardware Work Start)
+# Next Chat Handoff (Current Workflow)
 
-Use this prompt/context in the next SSH-focused chat to continue quickly.
+## Current State (Relevant)
 
-## Environment Status
+- Main branch has local commits ahead of remote and includes:
+  - `of_experimental.py` (experimental wrapper and advanced experiments)
+  - `of_graph.py` (plotting trends from logs)
+  - centralized advanced sensor helpers in `of_sensor.py`
+  - minimal `pytest` scaffold in `optical_flow/tests/`
+- Deprecated `of_first_test.py` has been removed.
+- Target runtime remains ROS2 C++ later; Python is for diagnostics/calibration/prototyping now.
+- Dedicated diagnostics `hb-tune` mode is intentionally deferred (tracked as future feature).
 
-- Windows machine has working SSH alias `pi4`.
-- Pi SSH login works passwordlessly from Windows shell.
-- GitHub remote for repo is configured and pushing works.
-- Default branch cleanup done (`Main` removed, `main` is canonical).
-- Repo root path on Pi: `~/robotics`
-- Optical flow project path: `~/robotics/optical_flow`
+## Git + SSH Workflow (Cursor Machine)
 
-## Current Project Intent
+- Remote uses SSH alias:
+  - `origin = git@github-robotics:AI-Bas/robotics-fundamentals-lab.git`
+- Alias config exists in `~/.ssh/config` and authentication works.
+- Quick verification commands:
 
-- Build practical robotics fundamentals workflow on Raspberry Pi.
-- Operate primarily headless over SSH.
-- Use PAA5100JE optical flow sensor over SPI.
-- First hardware milestone:
-  - probe LED control behavior (if exposed)
-  - stream and log dx/dy and derived velocity to CSV
-  - include troubleshooting metadata
+```bash
+ssh -T git@github-robotics
+git -C ~/robotics remote -v
+git -C ~/robotics status -sb
+```
 
-## Files Added/Updated in This Chat
+- If push fails, check:
+  1. internet connectivity on this machine
+  2. `~/.ssh/config` still contains `Host github-robotics`
+  3. correct key path and permissions (`chmod 600 ~/.ssh/id_*`)
 
-- `README.md` (monorepo intent and workflow)
-- `optical_flow/README.md` (sensor context and LED control notes)
-- `optical_flow/requirements.txt` (baseline deps)
-- `optical_flow/src/paa5100_first_test.py` (info/led/motion test utility)
+## Pi Networking Note (Ethernet via PC Wi-Fi Sharing)
 
-## Hardware Notes (Research Summary)
+- This workflow is valid and should work consistently.
+- Stable startup habits:
+  - keep one persistent terminal multiplexer session on Pi (`tmux`)
+  - avoid reconnecting from scratch each time
+  - run code from repo on Pi only for hardware tests; do heavy edits from Cursor machine
 
-- The two white SMD parts near the lens are illumination LEDs.
-- They are generally controlled by the sensor internals/registers.
-- Community-tested LED write sequence:
-  - select bank: write `0x7F = 0x14`
-  - LED register: write `0x6F = 0x1C` (on/medium), `0x00` (off)
-  - return bank: write `0x7F = 0x00`
-- Library support differs by version:
-  - some expose a direct `set_led(...)`
-  - otherwise private/raw write path is needed
-
-## First Commands To Run On Pi
+## Session Start Commands (Pi)
 
 ```bash
 cd ~/robotics/optical_flow
-python3 -m venv .venv
 source .venv/bin/activate
-# If gpiod fails to build: sudo apt install -y libgpiod-dev python3-dev
-# pmw3901 also needs: gpiodevice (included in requirements.txt)
-python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-
-python src/paa5100_first_test.py --mode info
-python src/paa5100_first_test.py --mode motion --seconds 20 --rate-hz 50
-python src/paa5100_first_test.py --mode led --blink-count 8 --blink-period 0.35
+python -m pytest
+python src/of_sensor_smoke.py --samples 10
 ```
 
-## Troubleshooting Focus
-
-- Verify SPI is enabled in `raspi-config`.
-- Confirm CS line (`--spi-cs 0` vs `--spi-cs 1`).
-- Keep sensor at close working distance over textured surface.
-- If no motion:
-  - inspect wiring and supply
-  - try both CS options
-  - inspect exception text in script output and CSV rows
-
-## Suggested Immediate Next Branch
+## Core Run Commands
 
 ```bash
-cd ~/robotics
-git checkout -b feat/paa5100-led-and-motion-validation
+# experimental capability checks
+python src/of_experimental.py --mode probe
+python src/of_experimental.py --mode burst --samples 20 --sample-period 0.03
+python src/of_experimental.py --mode frame --samples 5
+
+# diagnostics / logs
+python src/of_diagnostics.py --mode stream-log --stream-seconds 60 --stream-target-hz 30 --log-dir logs
+python src/of_diagnostics.py --mode rate-sweep --sweep-start-hz 10 --sweep-stop-hz 140 --sweep-step-hz 10 --sweep-hold-s 2 --log-dir logs
+
+# graph analysis
+python src/of_graph.py --log-dir logs --out-dir logs/plots
 ```
+
+## Next Priorities
+
+1. Capture reference-surface datasets (constant known velocity and varied lighting).
+2. Compare sweep/stream stability versus LED brightness and polling rate.
+3. Calibrate `counts_to_mps_scale` and update ROS2 profile export inputs.
+4. Add ROS2-phase `hb-tune` mode once runtime integration starts.
 
