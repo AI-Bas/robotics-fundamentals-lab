@@ -18,6 +18,7 @@ fi
 
 BRANCH="${2:-main}"
 KEY_PATH="${GIT_KEY_PATH:-$HOME/.ssh/id_ed25519_github_robotics_fundamentals_lab}"
+SSH_CONFIG_PATH="${GIT_SSH_CONFIG:-$HOME/.ssh/config}"
 
 if [[ ! -d "$REPO_ROOT/.git" ]]; then
   echo "error: not a git repo: $REPO_ROOT" >&2
@@ -27,12 +28,17 @@ if [[ ! -f "$KEY_PATH" ]]; then
   echo "error: ssh key not found: $KEY_PATH" >&2
   exit 1
 fi
+if [[ ! -f "$SSH_CONFIG_PATH" ]]; then
+  echo "error: ssh config not found: $SSH_CONFIG_PATH" >&2
+  exit 1
+fi
 
 cd "$REPO_ROOT"
 
 echo "repo:   $REPO_ROOT"
 echo "branch: $BRANCH"
 echo "key:    $KEY_PATH"
+echo "config: $SSH_CONFIG_PATH"
 
-GIT_SSH_COMMAND="ssh -i \"$KEY_PATH\" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new" \
+GIT_SSH_COMMAND="ssh -F \"$SSH_CONFIG_PATH\" -i \"$KEY_PATH\" -o IdentitiesOnly=yes -o UserKnownHostsFile=\"$HOME/.ssh/known_hosts\" -o StrictHostKeyChecking=accept-new" \
   git push origin "HEAD:$BRANCH"
