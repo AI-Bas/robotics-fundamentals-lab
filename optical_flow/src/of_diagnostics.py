@@ -23,7 +23,7 @@ from datetime import datetime
 from typing import Optional
 
 from pmw3901 import PAA5100
-from of_sensor import default_config_path, led_breathe, set_led, open_sensor, resolve_settings
+from of_sensor import default_config_path, led_breathe, set_led, open_sensor, resolve_settings, sensor_probe
 
 
 def _now_iso() -> str:
@@ -65,19 +65,6 @@ def _new_json_path(log_dir: str, stem: str) -> str:
 def _write_json(path: str, payload: dict) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, sort_keys=True)
-
-
-def _sensor_probe(sensor: PAA5100) -> dict:
-    out: dict[str, str] = {}
-    for name in ("get_id", "get_motion", "get_motion_slow", "frame_capture"):
-        out[f"has_{name}"] = str(callable(getattr(sensor, name, None)))
-    get_id = getattr(sensor, "get_id", None)
-    if callable(get_id):
-        try:
-            out["sensor_id"] = str(get_id())
-        except Exception as exc:  # pragma: no cover
-            out["sensor_id"] = f"error:{exc!r}"
-    return out
 
 
 def _check_spidev_nodes(spi_port: int, spi_cs: int) -> bool:
@@ -452,6 +439,9 @@ def run_stable_rate_sweep(
     hold_s: float,
     max_error_rate: float,
     max_jitter_ratio: float,
+    max_speed_cv: float,
+    reference_velocity_mps: float,
+    counts_to_mps_scale: float,
     include_mem: bool,
 ) -> int:
     print("=== Stable Poll-Rate Sweep ===")
@@ -460,6 +450,8 @@ def run_stable_rate_sweep(
 
     rate = start_hz
     best_stable = 0.0
+    best_balanced = 0.0
+    best_balanced_score = -1.0
     rows: list[list[object]] = []
     mem0 = _process_memory_kb()
     while rate <= stop_hz + 1e-9:
@@ -468,6 +460,7 @@ def run_stable_rate_sweep(
         errors = 0
         reads = 0
         dts: list[float] = []
+        speeds_counts_s: list[float] = []
         t_prev_success: Optional[float] = None
         next_tick = time.perf_counter()
         while time.perf_counter() < t_end:
@@ -476,10 +469,13 @@ def run_stable_rate_sweep(
                 time.sleep(next_tick - now)
             loop_start = time.perf_counter()
             try:
-                sensor.get_motion()
+                dx, dy = sensor.get_motion()
                 reads += 1
                 if t_prev_success is not None:
-                    dts.append(loop_start - t_prev_success)
+                    dt = loop_start - t_prev_success
+                    dts.append(dt)
+                    if dt > 0:
+                        speeds_counts_s.append(math.hypot(dx, dy) / dt)
                 t_prev_success = loop_start
             except Exception:  # pragma: no cover
                 errors += 1
@@ -489,20 +485,41 @@ def run_stable_rate_sweep(
         jitter = statistics.pstdev(dts) if len(dts) > 1 else 0.0
         jitter_ratio = (jitter / target_dt) if target_dt > 0 else 999.0
         mean_hz = (1.0 / statistics.fmean(dts)) if dts else 0.0
+        speed_cv = (
+            (statistics.pstdev(speeds_counts_s) / max(1e-9, statistics.fmean(speeds_counts_s)))
+            if len(speeds_counts_s) > 1 and statistics.fmean(speeds_counts_s) > 0
+            else 0.0
+        )
+        ref_vel_error = 0.0
+        if reference_velocity_mps > 0 and counts_to_mps_scale > 0 and speeds_counts_s:
+            vel_est = [v * counts_to_mps_scale for v in speeds_counts_s]
+            ref_vel_error = abs(statistics.fmean(vel_est) - reference_velocity_mps)
         expected_reads = max(1, int(hold_s * rate))
         min_reads_for_stable = max(5, int(expected_reads * 0.8))
         achieved_ratio = (mean_hz / rate) if rate > 0 else 0.0
         stable = int(
             error_rate <= max_error_rate
             and jitter_ratio <= max_jitter_ratio
+            and speed_cv <= max_speed_cv
             and reads >= min_reads_for_stable
             and achieved_ratio >= 0.8
         )
+        # Balance reliability and consistency over raw rate.
+        consistency_penalty = (jitter_ratio + speed_cv + ref_vel_error)
+        balanced_score = (
+            (1.0 - error_rate) * achieved_ratio / (1.0 + consistency_penalty)
+            if reads > 0
+            else 0.0
+        )
         if stable:
             best_stable = rate
+        if balanced_score > best_balanced_score:
+            best_balanced_score = balanced_score
+            best_balanced = rate
         print(
             f"rate={rate:.1f}Hz mean={mean_hz:.1f}Hz errors={errors} "
             f"error_rate={error_rate:.3f} jitter_ratio={jitter_ratio:.3f} "
+            f"speed_cv={speed_cv:.3f} score={balanced_score:.3f} "
             f"reads={reads}/{min_reads_for_stable}+ stable={bool(stable)}"
         )
         rows.append(
@@ -515,8 +532,11 @@ def run_stable_rate_sweep(
                 f"{error_rate:.6f}",
                 f"{jitter:.6f}",
                 f"{jitter_ratio:.6f}",
+                f"{speed_cv:.6f}",
+                f"{ref_vel_error:.6f}",
                 f"{mean_hz:.3f}",
                 f"{achieved_ratio:.6f}",
+                f"{balanced_score:.6f}",
                 min_reads_for_stable,
                 stable,
             ]
@@ -536,8 +556,11 @@ def run_stable_rate_sweep(
             "error_rate",
             "dt_jitter_std_s",
             "jitter_ratio_to_target_dt",
+            "speed_counts_s_cv",
+            "reference_velocity_error_mps",
             "mean_achieved_hz",
             "achieved_ratio",
+            "balanced_score",
             "min_reads_for_stable",
             "stable",
         ]
@@ -547,6 +570,7 @@ def run_stable_rate_sweep(
         w.writerows(rows)
 
     print(f"highest_stable_hz: {best_stable:.1f}")
+    print(f"best_balanced_hz: {best_balanced:.1f} (score={best_balanced_score:.3f})")
     mem1 = _process_memory_kb()
     summary = {
         "kind": "paa5100_rate_sweep_summary",
@@ -558,7 +582,12 @@ def run_stable_rate_sweep(
         "hold_s": hold_s,
         "max_error_rate": max_error_rate,
         "max_jitter_ratio": max_jitter_ratio,
+        "max_speed_cv": max_speed_cv,
+        "reference_velocity_mps": reference_velocity_mps,
+        "counts_to_mps_scale": counts_to_mps_scale,
         "highest_stable_hz": best_stable,
+        "best_balanced_hz": best_balanced,
+        "best_balanced_score": best_balanced_score,
         "include_mem": include_mem,
         "process_mem_kb_start": mem0,
         "process_mem_kb_end": mem1,
@@ -767,6 +796,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--sweep-hold-s", type=float, default=2.0)
     p.add_argument("--max-error-rate", type=float, default=0.01)
     p.add_argument("--max-jitter-ratio", type=float, default=0.40)
+    p.add_argument("--max-speed-cv", type=float, default=0.60, help="Max allowed coefficient of variation for speed_counts_s")
+    p.add_argument("--reference-velocity-mps", type=float, default=0.0, help="Optional known reference velocity for verification")
+    p.add_argument("--counts-to-mps-scale", type=float, default=0.0, help="Calibration scale for converting counts/s to m/s")
     p.add_argument("--stream-seconds", type=float, default=30.0)
     p.add_argument("--stream-target-hz", type=float, default=30.0)
     p.add_argument("--stream-led-on", action="store_true", help="Enable sensor LED continuously during stream logging")
@@ -811,7 +843,7 @@ def main() -> int:
     except Exception as exc:  # pragma: no cover (hardware path)
         print(f"FAIL: sensor open failed: {exc!r}")
         return 1
-    probe = _sensor_probe(sensor)
+    probe = sensor_probe(sensor)
     if probe:
         print("sensor probe: " + ", ".join(f"{k}={v}" for k, v in sorted(probe.items())))
 
@@ -847,6 +879,9 @@ def main() -> int:
             args.sweep_hold_s,
             args.max_error_rate,
             args.max_jitter_ratio,
+            args.max_speed_cv,
+            args.reference_velocity_mps,
+            args.counts_to_mps_scale,
             args.include_mem,
         )
     if args.mode == "stream-log":
@@ -885,6 +920,9 @@ def main() -> int:
             args.sweep_hold_s,
             args.max_error_rate,
             args.max_jitter_ratio,
+            args.max_speed_cv,
+            args.reference_velocity_mps,
+            args.counts_to_mps_scale,
             args.include_mem,
         ),
         run_stream_log(

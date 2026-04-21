@@ -41,9 +41,9 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-## First Test Script (Experimental Wrapper)
+## Experimental Script
 
-`src/of_first_test.py` is kept as an experimental reference wrapper only.
+`src/of_experimental.py` is kept as an experimental wrapper.
 Core functionality now lives in dedicated scripts by use case.
 
 Hardware and SPI defaults are read from:
@@ -56,19 +56,28 @@ Run:
 
 ```bash
 source .venv/bin/activate
-python src/of_first_test.py --help
-python src/of_first_test.py --mode info
+python src/of_experimental.py --help
+python src/of_experimental.py --mode info
 ```
 
 Recommended sequence (delegated wrappers):
 
-1. `python src/of_first_test.py --mode info`
-2. `python src/of_first_test.py --mode motion --seconds 15`
-3. `python src/of_first_test.py --mode led --led-mode blink --blink-count 6 --led-percent 30`
+1. `python src/of_experimental.py --mode info`
+2. `python src/of_experimental.py --mode motion --seconds 15`
+3. `python src/of_experimental.py --mode led --led-mode blink --blink-count 6 --led-percent 30`
 
 If needed, override YAML values temporarily:
 
-- `python src/of_first_test.py --mode led --spi-cs 0`
+- `python src/of_experimental.py --mode led --spi-cs 0`
+
+Additional advanced experiments (when available in your local `pmw3901` build):
+
+- `python src/of_experimental.py --mode probe`
+- `python src/of_experimental.py --mode burst --samples 20 --sample-period 0.03`
+- `python src/of_experimental.py --mode frame --samples 5`
+- `python src/of_experimental.py --mode register-read --register 0x07`
+
+Why this matters: these modes let you probe capabilities and sample raw-ish data paths before committing to ROS2 runtime features.
 
 If LED control is not exposed in your local package version, use communication and stream modes for validation.
 
@@ -100,6 +109,9 @@ python src/of_diagnostics.py --mode benchmark-log --bench-seconds 10 --log-dir l
 
 # Stable-rate sweep to estimate highest sustainable polling rate
 python src/of_diagnostics.py --mode rate-sweep --sweep-start-hz 10 --sweep-stop-hz 140 --sweep-step-hz 10 --sweep-hold-s 2
+
+# Future feature (ROS2 integration phase): dedicated hb-tune mode with runtime recommendation output
+# planned: python src/of_diagnostics.py --mode hb-tune ...
 
 # Communication samples + CSV telemetry
 python src/of_diagnostics.py --mode comm-log --comm-samples 50 --log-dir logs
@@ -170,11 +182,12 @@ To keep use-cases separated while developing in Python:
 
 - `src/of_sensor.py` - shared sensor interaction and LED control primitives
 - `src/of_sensor_smoke.py` - fast health/smoke verification
-- `src/of_first_test.py` - experimental reference wrapper (delegates by mode)
+- `src/of_experimental.py` - experimental wrapper with delegated and raw-access experiments
 - `src/of_diagnostics.py` - deep troubleshooting, streaming, benchmark, sweep
 - `src/of_log_motion.py` - continuous stream logging wrapper
 - `src/of_log_tests.py` - benchmark/sweep wrapper
 - `src/of_calibration.py` - brightness/scale calibration for profile updates
+- `src/of_graph.py` - graph diagnostics/calibration trends and optimization results
 - `src/of_export_ros2_profile.py` - diagnostics -> ROS2 parameter YAML
 - `src/of_main.py` - simple top-level task router
 
@@ -195,14 +208,38 @@ python src/of_log_tests.py --mode both --bench-seconds 20 --log-dir logs
 # calibration (stationary + known velocity reference)
 python src/of_calibration.py --target-hz 20 --window-s 3 --reference-velocity-mps 0.5 --log-dir logs
 
+# graphs and optimization trends
+python src/of_graph.py --log-dir logs --out-dir logs/plots
+
 # task router variant
 python src/of_main.py smoke --samples 10
 python src/of_main.py stream-log --seconds 60 --target-hz 30
+python src/of_main.py graph --log-dir logs --out-dir logs/plots
 ```
 
 ## Logging Notes
 Key CSV/JSON outputs are produced by diagnostics and wrappers in `logs/`.
 For tracked references, see `optical_flow/log_examples/`.
+
+## Minimal Unit Tests (Development Practice)
+
+Unit tests here focus on pure logic and mocked sensor behavior, not hardware timing:
+
+```bash
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pytest
+```
+
+Included starter tests in `tests/test_of_sensor_unit.py` show how to validate:
+
+- LED percent mapping bounds
+- sensor capability probing output
+- motion burst snapshot parsing with mocked register reads
+
+Production guidance:
+- Keep hardware-on-Pi checks in diagnostics/smoke scripts (integration tests).
+- Keep fast deterministic logic checks in `pytest` unit tests.
 
 ## Troubleshooting
 

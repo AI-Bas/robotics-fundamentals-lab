@@ -8,8 +8,8 @@ from __future__ import annotations
 import argparse
 import sys
 
-from of_diagnostics import _sensor_probe, run_comm, run_preflight
-from of_sensor import default_config_path, led_breathe, open_sensor, resolve_settings
+from of_diagnostics import run_comm, run_preflight
+from of_sensor import default_config_path, led_breathe, open_sensor, resolve_settings, sensor_probe
 
 
 def parse_args() -> argparse.Namespace:
@@ -40,7 +40,7 @@ def main() -> int:
     if rc != 0:
         return rc
     sensor = open_sensor(settings.spi_port, settings.spi_cs, settings.rotation, settings.auto_cs)
-    probe = _sensor_probe(sensor)
+    probe = sensor_probe(sensor)
     if probe:
         print("sensor probe: " + ", ".join(f"{k}={v}" for k, v in sorted(probe.items())))
     if not args.skip_led_check:

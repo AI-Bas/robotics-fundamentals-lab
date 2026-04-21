@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 import time
 
 import yaml
@@ -133,6 +133,81 @@ def led_setter(sensor: PAA5100) -> tuple[Optional[Callable[[bool, int], None]], 
             write_fn(0x7F, 0x00)
         return _setter, "private _write(register, value)"
     return None, "no LED control path"
+
+
+def sensor_probe(sensor: PAA5100) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for name in ("get_id", "get_motion", "get_motion_slow", "frame_capture"):
+        out[f"has_{name}"] = str(callable(getattr(sensor, name, None)))
+    get_id = getattr(sensor, "get_id", None)
+    if callable(get_id):
+        try:
+            out["sensor_id"] = str(get_id())
+        except Exception as exc:  # pragma: no cover
+            out["sensor_id"] = f"error:{exc!r}"
+    out["has_private_read"] = str(callable(getattr(sensor, "_read", None)))
+    out["has_private_write"] = str(callable(getattr(sensor, "_write", None)))
+    return out
+
+
+def supports_raw_register_access(sensor: PAA5100) -> bool:
+    return callable(getattr(sensor, "_read", None)) and callable(getattr(sensor, "_write", None))
+
+
+def read_register(sensor: PAA5100, register: int) -> int:
+    read_fn = getattr(sensor, "_read", None)
+    if not callable(read_fn):
+        raise RuntimeError("Raw register read not available")
+    return int(read_fn(register))
+
+
+def write_register(sensor: PAA5100, register: int, value: int) -> None:
+    write_fn = getattr(sensor, "_write", None)
+    if not callable(write_fn):
+        raise RuntimeError("Raw register write not available")
+    write_fn(register, value)
+
+
+def motion_burst_snapshot(sensor: PAA5100) -> dict[str, Any]:
+    snap: dict[str, Any] = {"ok": False}
+    try:
+        dx, dy = sensor.get_motion()
+        snap.update({"ok": True, "dx": int(dx), "dy": int(dy)})
+    except Exception as exc:  # pragma: no cover
+        snap["error"] = repr(exc)
+        return snap
+    if supports_raw_register_access(sensor):
+        try:
+            snap["squal"] = read_register(sensor, 0x07)
+            shutter_l = read_register(sensor, 0x0B)
+            shutter_h = read_register(sensor, 0x0C)
+            snap["shutter"] = (shutter_h << 8) | shutter_l
+        except Exception as exc:  # pragma: no cover
+            snap["burst_extra_error"] = repr(exc)
+    return snap
+
+
+def frame_capture_snapshot(sensor: PAA5100, max_bytes: int = 1225) -> dict[str, Any]:
+    fn = getattr(sensor, "frame_capture", None)
+    if not callable(fn):
+        return {"ok": False, "error": "frame_capture not available"}
+    try:
+        raw = fn()
+        if isinstance(raw, (bytes, bytearray)):
+            data = list(raw[:max_bytes])
+        elif isinstance(raw, list):
+            data = [int(v) for v in raw[:max_bytes]]
+        else:
+            data = []
+        return {
+            "ok": True,
+            "bytes": len(data),
+            "mean": (sum(data) / len(data)) if data else 0.0,
+            "min": min(data) if data else 0,
+            "max": max(data) if data else 0,
+        }
+    except Exception as exc:  # pragma: no cover
+        return {"ok": False, "error": repr(exc)}
 
 
 def percent_to_led_level(percent: float | int | None) -> int:

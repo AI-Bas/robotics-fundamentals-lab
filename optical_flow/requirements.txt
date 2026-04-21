@@ -3,3 +3,5 @@ gpiod
 gpiodevice
 spidev
 PyYAML
+matplotlib
+pytest
