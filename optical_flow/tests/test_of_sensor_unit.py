@@ -28,6 +28,15 @@ class DummySensor:
         self.writes.append((register, value))
 
 
+class DummySensorWithSetLedAndWrite(DummySensor):
+    def __init__(self) -> None:
+        super().__init__()
+        self.set_led_calls: list[bool] = []
+
+    def set_led(self, on: bool) -> None:
+        self.set_led_calls.append(on)
+
+
 def test_percent_to_led_level_bounds() -> None:
     assert of_sensor.percent_to_led_level(None) == 0xD5
     assert of_sensor.percent_to_led_level(0) == 0x00
@@ -50,3 +59,12 @@ def test_motion_burst_snapshot_includes_register_details() -> None:
     assert snap["dy"] == -4
     assert snap["squal"] == 55
     assert snap["shutter"] == 0x1234
+
+
+def test_led_setter_prefers_register_write_when_available() -> None:
+    sensor = DummySensorWithSetLedAndWrite()
+    ok, source = of_sensor.set_led(sensor, True, 10)
+    assert ok is True
+    assert source == "private _write(register, value)"
+    assert sensor.writes[-3:] == [(0x7F, 0x14), (0x6F, of_sensor.percent_to_led_level(10)), (0x7F, 0x00)]
+    assert sensor.set_led_calls == []

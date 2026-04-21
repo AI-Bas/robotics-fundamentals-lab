@@ -117,13 +117,6 @@ def open_sensor(spi_port: int, spi_cs: int, rotation: int, auto_cs: bool) -> PAA
 
 
 def led_setter(sensor: PAA5100) -> tuple[Optional[Callable[[bool, int], None]], str]:
-    if hasattr(sensor, "set_led"):
-        method = getattr(sensor, "set_led")
-        if callable(method):
-            def _setter(on: bool, level: int) -> None:
-                # High-level API path may ignore brightness.
-                method(on)
-            return _setter, "set_led(bool)"
     write_fn = getattr(sensor, "_write", None)
     if callable(write_fn):
         def _setter(on: bool, level: int) -> None:
@@ -132,6 +125,13 @@ def led_setter(sensor: PAA5100) -> tuple[Optional[Callable[[bool, int], None]], 
             write_fn(0x6F, level if on else 0x00)
             write_fn(0x7F, 0x00)
         return _setter, "private _write(register, value)"
+    if hasattr(sensor, "set_led"):
+        method = getattr(sensor, "set_led")
+        if callable(method):
+            def _setter(on: bool, level: int) -> None:
+                # Fallback path when low-level register write is unavailable.
+                method(on)
+            return _setter, "set_led(bool)"
     return None, "no LED control path"
 
 
