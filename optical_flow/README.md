@@ -197,6 +197,7 @@ Examples:
 # smoke test
 python src/of_sensor_smoke.py --samples 10
 python src/of_sensor_smoke.py --samples 10 --led-up-s 1.0 --led-down-s 1.0
+python src/of_sensor_smoke.py --samples 10 --led-final-percent 10
 
 # continuous stream logging
 python src/of_log_motion.py --seconds 60 --target-hz 30 --log-dir logs
@@ -240,6 +241,11 @@ Included starter tests in `tests/test_of_sensor_unit.py` show how to validate:
 Production guidance:
 - Keep hardware-on-Pi checks in diagnostics/smoke scripts (integration tests).
 - Keep fast deterministic logic checks in `pytest` unit tests.
+
+LED brightness interface guidance:
+- Use `--led-*-percent` in the human-friendly `0-100` range for CLI and config.
+- Internally map that to sensor register levels for hardware writes.
+- Allow float input for tuning, while effectively supporting integer workflows.
 
 ## Troubleshooting
 

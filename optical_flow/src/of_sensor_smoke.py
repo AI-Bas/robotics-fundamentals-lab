@@ -9,7 +9,7 @@ import argparse
 import sys
 
 from of_diagnostics import run_comm, run_preflight
-from of_sensor import default_config_path, led_breathe, open_sensor, resolve_settings, sensor_probe
+from of_sensor import default_config_path, led_breathe, open_sensor, resolve_settings, sensor_probe, set_led
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,6 +24,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--led-up-s", type=float, default=1.0)
     p.add_argument("--led-down-s", type=float, default=1.0)
     p.add_argument("--led-steps", type=int, default=20)
+    p.add_argument("--led-final-percent", type=float, default=10.0)
     return p.parse_args()
 
 
@@ -52,7 +53,13 @@ def main() -> int:
         print(f"smoke led path: {src}")
         if not ok:
             print("smoke led check: unavailable")
-    return run_comm(sensor, args.samples)
+    rc = run_comm(sensor, args.samples)
+    ok, src = set_led(sensor, True, args.led_final_percent)
+    if ok:
+        print(f"smoke done: LED left at {args.led_final_percent:.1f}% via {src}")
+    else:
+        print(f"smoke done: unable to set final LED level ({src})")
+    return rc
 
 
 if __name__ == "__main__":
