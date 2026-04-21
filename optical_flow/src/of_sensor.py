@@ -15,6 +15,11 @@ from pmw3901 import PAA5100
 
 _LED_LEVEL_MAX = 0xD5
 _LED_LEVEL_MIN = 0x00
+_LED_LEVEL_MED = 0x1C
+_LED_LEVEL_BANK = 0x14
+_LED_WRITE_SETTLE_S = 0.01
+_LED_WORKING_MIN = 80
+_LED_WORKING_MAX = 212
 
 
 @dataclass
@@ -121,9 +126,11 @@ def led_setter(sensor: PAA5100) -> tuple[Optional[Callable[[bool, int], None]], 
     if callable(write_fn):
         def _setter(on: bool, level: int) -> None:
             level = max(0, min(0xD5, int(level)))
-            write_fn(0x7F, 0x14)
+            write_fn(0x7F, _LED_LEVEL_BANK)
             write_fn(0x6F, level if on else 0x00)
             write_fn(0x7F, 0x00)
+            # Let LED drive state settle before next command/read.
+            time.sleep(_LED_WRITE_SETTLE_S)
         return _setter, "private _write(register, value)"
     if hasattr(sensor, "set_led"):
         method = getattr(sensor, "set_led")
@@ -211,10 +218,37 @@ def frame_capture_snapshot(sensor: PAA5100, max_bytes: int = 1225) -> dict[str, 
 
 
 def percent_to_led_level(percent: float | int | None) -> int:
+    """
+    Default mapping: linear over empirically visible working range.
+
+    On some boards/builds raw values below ~80 appear visually off, and the
+    full 0..0xD5 range is not monotonic by eye. Default to a constrained range
+    for smoother operator-facing behavior.
+    """
+    if percent is None:
+        return _LED_LEVEL_MAX
+    pct = max(0.0, min(100.0, float(percent)))
+    return int(round(_LED_WORKING_MIN + (_LED_WORKING_MAX - _LED_WORKING_MIN) * (pct / 100.0)))
+
+
+def percent_to_led_level_linear_raw(percent: float | int | None) -> int:
+    """Experimental linear raw mapping (not guaranteed visually monotonic)."""
     if percent is None:
         return _LED_LEVEL_MAX
     pct = max(0.0, min(100.0, float(percent)))
     return int(round(_LED_LEVEL_MIN + (_LED_LEVEL_MAX - _LED_LEVEL_MIN) * (pct / 100.0)))
+
+
+def percent_to_led_level_magic(percent: float | int | None) -> int:
+    """Three-state mapping based on commonly documented magic values."""
+    if percent is None:
+        return _LED_LEVEL_MAX
+    pct = max(0.0, min(100.0, float(percent)))
+    if pct < 40.0:
+        return _LED_LEVEL_MIN
+    if pct < 90.0:
+        return _LED_LEVEL_MED
+    return _LED_LEVEL_MAX
 
 
 def set_led(sensor: PAA5100, on: bool, percent: float | int | None = None) -> tuple[bool, str]:
@@ -223,6 +257,14 @@ def set_led(sensor: PAA5100, on: bool, percent: float | int | None = None) -> tu
         return False, source
     effective = percent_to_led_level(percent)
     setter(on, effective)
+    return True, source
+
+
+def set_led_level(sensor: PAA5100, on: bool, level: int) -> tuple[bool, str]:
+    setter, source = led_setter(sensor)
+    if setter is None:
+        return False, source
+    setter(on, max(_LED_LEVEL_MIN, min(_LED_LEVEL_MAX, int(level))))
     return True, source
 
 
@@ -270,3 +312,49 @@ def led_breathe(
             return ok, source
         time.sleep(down_dt)
     return set_led(sensor, False, 0)
+
+
+def led_ramp_linear_levels(
+    sensor: PAA5100,
+    *,
+    up_seconds: float = 2.0,
+    down_seconds: float = 2.0,
+    level_step: int = 1,
+    min_level: int = _LED_WORKING_MIN,
+    max_level: int = _LED_WORKING_MAX,
+    end_off: bool = False,
+) -> tuple[bool, str]:
+    source = "unknown"
+    step = max(1, int(level_step))
+    lo = max(_LED_LEVEL_MIN, min(_LED_LEVEL_MAX, int(min_level)))
+    hi = max(_LED_LEVEL_MIN, min(_LED_LEVEL_MAX, int(max_level)))
+    if lo > hi:
+        lo, hi = hi, lo
+    levels = list(range(lo, hi + 1, step))
+    if levels[-1] != hi:
+        levels.append(hi)
+    if len(levels) < 2:
+        levels = [lo, hi]
+
+    up_dt = max(0.0, up_seconds) / (len(levels) - 1)
+    down_dt = max(0.0, down_seconds) / (len(levels) - 1)
+
+    for level in levels:
+        ok, source = set_led_level(sensor, True, level)
+        if not ok:
+            return ok, source
+        time.sleep(up_dt)
+    for level in reversed(levels):
+        ok, source = set_led_level(sensor, True, level)
+        if not ok:
+            return ok, source
+        time.sleep(down_dt)
+    if end_off:
+        return set_led_level(sensor, False, _LED_LEVEL_MIN)
+    return True, source
+
+
+def get_motion_with_led(sensor: PAA5100, *, led_percent: float | int | None = None) -> tuple[int, int]:
+    if led_percent is not None:
+        set_led(sensor, True, led_percent)
+    return sensor.get_motion()
