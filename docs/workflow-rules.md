@@ -20,7 +20,7 @@ Keep progress durable across sessions without bloating chat context or re-discov
 
 ## Handoff Rules
 
-- Update `START_HERE_NEXT_CHAT.md` at session end using the template in `docs/session-handoff-template.md`.
+- Update `docs/session-handoff.md` at session end using the template in `docs/session-handoff-template.md`.
 - Keep handoff concise (20-30 lines).
 - Include one copy/paste restart block.
 - Move long investigation details into dedicated docs.

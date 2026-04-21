@@ -82,17 +82,13 @@ Tips:
 - keep commits small and focused (easier rollback/review)
 - push at checkpoints, not every save
 
-## Keep Local Notes Out of Pushes
+## Session Handoff Notes
 
-`START_HERE_NEXT_CHAT.md` is configured locally as a personal handoff file:
-- marked `skip-worktree` in this clone
-- added to `.git/info/exclude` in this clone
+Use tracked handoff docs so session continuity is shared and reproducible:
 
-If you need to intentionally commit it later:
-
-```bash
-git update-index --no-skip-worktree START_HERE_NEXT_CHAT.md
-```
+- `docs/session-handoff.md` for the current concise restart state
+- `docs/session-handoff-template.md` for the standard handoff structure
+- `docs/workflow-rules.md` for low-context working conventions
 
 ## Python venv and Dependency Versioning
 
