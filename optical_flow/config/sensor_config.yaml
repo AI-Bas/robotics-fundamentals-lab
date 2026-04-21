@@ -1,0 +1,28 @@
+sensor:
+  model: PAA5100JE
+  interface: spi
+
+spi:
+  # SPI bus index on Raspberry Pi (usually 0)
+  port: 0
+  # Chip select line on SPI0:
+  #   0 = CE0 (BCM GPIO8)
+  #   1 = CE1 (BCM GPIO7)
+  cs: 1
+  # Optional fallback behavior in test script
+  auto_cs: true
+
+sensor_runtime:
+  # Sensor frame rotation in degrees
+  rotation: 0
+
+pins:
+  # Update these to match your wiring.
+  # Values are BCM GPIO labels for traceability.
+  sck: GPIO11
+  mosi: GPIO10
+  miso: GPIO9
+  cs: GPIO7
+  int: GPIO22
+  power: 3V3
+  ground: GND
