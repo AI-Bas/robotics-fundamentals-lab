@@ -4,15 +4,15 @@ optical_flow_node:
     poll_hz: 5.0
     quality:
       max_error_rate: 0.01
-      max_jitter_ratio: 8.0424
+      max_jitter_ratio: 1.9974
       require_nonzero_motion: false
     calibration:
       counts_to_mps_scale: 0.0
       scale_source: unset
       notes: Set after disk/ball calibration protocol.
     diagnostics_source_files:
-      comm_summary: optical_flow/logs/paa5100_comm_summary_20260421_160915.json
-      benchmark_summary: optical_flow/logs/paa5100_benchmark_summary_20260421_161005.json
-      rate_sweep_summary: optical_flow/logs/paa5100_rate_sweep_summary_20260421_160959.json
-      stream_summary: optical_flow/logs/paa5100_stream_summary_20260421_160946.json
-    generated_at: '2026-04-21T16:10:05'
+      comm_summary: optical_flow/logs/paa5100_comm_summary_20260421_162926.json
+      benchmark_summary: optical_flow/logs/paa5100_benchmark_summary_20260421_163003.json
+      rate_sweep_summary: optical_flow/logs/paa5100_rate_sweep_summary_20260421_163010.json
+      stream_summary: optical_flow/logs/paa5100_stream_summary_20260421_162959.json
+    generated_at: '2026-04-21T16:30:18'

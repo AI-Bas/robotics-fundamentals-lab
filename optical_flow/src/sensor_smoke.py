@@ -7,9 +7,10 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 
 from paa5100_diagnostics import _sensor_probe, run_comm, run_preflight
-from sensor import default_config_path, open_sensor, resolve_settings
+from sensor import default_config_path, led_setter, open_sensor, resolve_settings
 
 
 def parse_args() -> argparse.Namespace:
@@ -20,6 +21,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--rotation", type=int, default=None, choices=[0, 90, 180, 270])
     p.add_argument("--no-auto-cs", action="store_true")
     p.add_argument("--samples", type=int, default=8)
+    p.add_argument("--skip-led-check", action="store_true")
+    p.add_argument("--led-level", type=int, default=0x1C)
+    p.add_argument("--led-blinks", type=int, default=2)
+    p.add_argument("--led-period", type=float, default=0.15)
     return p.parse_args()
 
 
@@ -39,6 +44,19 @@ def main() -> int:
     probe = _sensor_probe(sensor)
     if probe:
         print("sensor probe: " + ", ".join(f"{k}={v}" for k, v in sorted(probe.items())))
+    if not args.skip_led_check:
+        set_led, source = led_setter(sensor)
+        print(f"smoke led path: {source}")
+        if set_led is None:
+            print("smoke led check: unavailable")
+        else:
+            for i in range(max(1, args.led_blinks)):
+                set_led(True, args.led_level)
+                print(f"smoke led blink {i + 1}/{args.led_blinks}: ON (level={args.led_level})")
+                time.sleep(args.led_period)
+                set_led(False, args.led_level)
+                print(f"smoke led blink {i + 1}/{args.led_blinks}: OFF")
+                time.sleep(args.led_period)
     return run_comm(sensor, args.samples)
 
 
