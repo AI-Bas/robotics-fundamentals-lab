@@ -1,0 +1,29 @@
+{
+  "csv_path": "optical_flow/logs/paa5100_stream_20260421_162952.csv",
+  "dt_jitter_std_s": 0.1664505627120371,
+  "error_rate": 0.0,
+  "errors": 0,
+  "include_mem": false,
+  "jitter_ratio_to_target_dt": 1.9974067525444452,
+  "kind": "paa5100_stream_summary",
+  "mean_hz": 8.770513178320142,
+  "mean_speed_counts_s": 25.154937178691796,
+  "process_mem_kb_delta": 0,
+  "process_mem_kb_end": 16592,
+  "process_mem_kb_start": 16592,
+  "reads": 49,
+  "seconds": 6.0,
+  "stream_reliable": false,
+  "target_hz": 12.0,
+  "thresholds": {
+    "max_error_rate": 0.01,
+    "max_jitter_ratio": 0.4,
+    "min_effective_rate_ratio": 0.8,
+    "min_speed_counts_s": 0.0
+  },
+  "timestamp": "2026-04-21T16:29:59.509",
+  "unreliable_reasons": [
+    "HIGH_JITTER",
+    "LOW_EFFECTIVE_RATE"
+  ]
+}

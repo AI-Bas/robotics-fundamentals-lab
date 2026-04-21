@@ -10,6 +10,7 @@ Convert raw optical flow output (`dx`, `dy`, counts/sample) into physical surfac
 - Constant RPM setpoints (both directions if possible)
 - Sensor mounted at fixed height and angle
 - Stable lighting and textured surface
+- Keep LED level fixed during each run; tune level between runs only.
 
 Reference tangential speed:
 
@@ -19,7 +20,7 @@ Reference tangential speed:
 
 1. Warm up sensor for ~30 seconds.
 2. Run stream logging at fixed poll target:
-   - `python src/paa5100_diagnostics.py --mode stream-log --stream-seconds 30 --stream-target-hz 30 --log-dir logs`
+   - `python src/paa5100_diagnostics.py --mode stream-log --stream-seconds 30 --stream-target-hz 30 --stream-led-on --stream-led-level 213 --log-dir logs`
 3. For each RPM setpoint/direction:
    - Hold steady for 20-30 seconds
    - Record run metadata: `rpm`, `radius_m`, direction, surface type, height

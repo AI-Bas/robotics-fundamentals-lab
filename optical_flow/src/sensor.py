@@ -12,6 +12,8 @@ from typing import Callable, Optional
 import yaml
 from pmw3901 import PAA5100
 
+DEFAULT_LED_LEVEL = 0xD5
+
 
 @dataclass
 class SensorSettings:
@@ -129,3 +131,12 @@ def led_setter(sensor: PAA5100) -> tuple[Optional[Callable[[bool, int], None]], 
             write_fn(0x7F, 0x00)
         return _setter, "private _write(register, value)"
     return None, "no LED control path"
+
+
+def set_led(sensor: PAA5100, on: bool, level: int | None = None) -> tuple[bool, str]:
+    setter, source = led_setter(sensor)
+    if setter is None:
+        return False, source
+    effective = DEFAULT_LED_LEVEL if level is None else level
+    setter(on, effective)
+    return True, source

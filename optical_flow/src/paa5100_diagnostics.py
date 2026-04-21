@@ -20,11 +20,10 @@ import statistics
 import sys
 import time
 from datetime import datetime
-from typing import Callable, Optional
+from typing import Optional
 
-import yaml
 from pmw3901 import PAA5100
-from sensor import default_config_path, led_setter, open_sensor, resolve_settings
+from sensor import DEFAULT_LED_LEVEL, default_config_path, led_setter, set_led, open_sensor, resolve_settings
 
 
 def _now_iso() -> str:
@@ -558,6 +557,8 @@ def run_stream_log(
     max_error_rate: float,
     max_jitter_ratio: float,
     min_speed_counts_s: float,
+    stream_led_on: bool,
+    stream_led_level: int,
     include_mem: bool,
 ) -> int:
     print("=== Continuous Stream Log ===")
@@ -573,6 +574,9 @@ def run_stream_log(
     speeds: list[float] = []
     t_prev: Optional[float] = None
     mem0 = _process_memory_kb()
+    if stream_led_on:
+        ok_led, src_led = set_led(sensor, True, stream_led_level)
+        print(f"stream led: {'enabled' if ok_led else 'unavailable'} via {src_led}, level={stream_led_level}")
 
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
@@ -653,6 +657,9 @@ def run_stream_log(
             if target_dt > 0:
                 next_tick += target_dt
 
+    if stream_led_on:
+        set_led(sensor, False, stream_led_level)
+
     mem1 = _process_memory_kb()
     jitter = statistics.pstdev(dts) if len(dts) > 1 else 0.0
     mean_hz = (1.0 / statistics.fmean(dts)) if dts else 0.0
@@ -682,6 +689,8 @@ def run_stream_log(
         "dt_jitter_std_s": jitter,
         "jitter_ratio_to_target_dt": jitter_ratio,
         "mean_speed_counts_s": speed_mean,
+        "stream_led_on": stream_led_on,
+        "stream_led_level": stream_led_level if stream_led_on else None,
         "stream_reliable": len(unreliable_reasons) == 0,
         "unreliable_reasons": unreliable_reasons,
         "thresholds": {
@@ -716,8 +725,13 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no-auto-cs", action="store_true")
     p.add_argument("--comm-samples", type=int, default=12)
     p.add_argument("--blink-count", type=int, default=4)
-    p.add_argument("--blink-period", type=float, default=0.25)
-    p.add_argument("--led-level", type=int, default=0x1C, help="LED brightness register value 0..213 (0xD5)")
+    p.add_argument("--blink-period", type=float, default=0.35)
+    p.add_argument(
+        "--led-level",
+        type=int,
+        default=DEFAULT_LED_LEVEL,
+        help="LED brightness register value 0..213 (0xD5), default=max",
+    )
     p.add_argument("--bench-seconds", type=float, default=5.0)
     p.add_argument("--log-dir", default="logs")
     p.add_argument("--sweep-start-hz", type=float, default=10.0)
@@ -728,6 +742,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--max-jitter-ratio", type=float, default=0.40)
     p.add_argument("--stream-seconds", type=float, default=30.0)
     p.add_argument("--stream-target-hz", type=float, default=30.0)
+    p.add_argument("--stream-led-on", action="store_true", help="Enable sensor LED continuously during stream logging")
+    p.add_argument("--stream-led-level", type=int, default=DEFAULT_LED_LEVEL, help="LED level used when stream LED is on")
     p.add_argument("--min-speed-counts-s", type=float, default=0.0)
     p.add_argument("--include-mem", action="store_true", help="Include process_mem_kb columns in CSV logs")
     return p.parse_args()
@@ -798,6 +814,8 @@ def main() -> int:
             args.max_error_rate,
             args.max_jitter_ratio,
             args.min_speed_counts_s,
+            args.stream_led_on,
+            args.stream_led_level,
             args.include_mem,
         )
 
@@ -824,6 +842,8 @@ def main() -> int:
             args.max_error_rate,
             args.max_jitter_ratio,
             args.min_speed_counts_s,
+            args.stream_led_on,
+            args.stream_led_level,
             args.include_mem,
         ),
     ]

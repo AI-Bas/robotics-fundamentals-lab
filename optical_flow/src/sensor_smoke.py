@@ -10,7 +10,7 @@ import sys
 import time
 
 from paa5100_diagnostics import _sensor_probe, run_comm, run_preflight
-from sensor import default_config_path, led_setter, open_sensor, resolve_settings
+from sensor import DEFAULT_LED_LEVEL, led_setter, default_config_path, open_sensor, resolve_settings
 
 
 def parse_args() -> argparse.Namespace:
@@ -22,9 +22,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no-auto-cs", action="store_true")
     p.add_argument("--samples", type=int, default=8)
     p.add_argument("--skip-led-check", action="store_true")
-    p.add_argument("--led-level", type=int, default=0x1C)
+    p.add_argument("--led-level", type=int, default=DEFAULT_LED_LEVEL)
     p.add_argument("--led-blinks", type=int, default=2)
-    p.add_argument("--led-period", type=float, default=0.15)
+    p.add_argument("--led-period", type=float, default=0.35)
     return p.parse_args()
 
 

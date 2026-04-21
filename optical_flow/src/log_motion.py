@@ -9,7 +9,7 @@ import argparse
 import sys
 
 from paa5100_diagnostics import run_preflight, run_stream_log
-from sensor import default_config_path, open_sensor, resolve_settings
+from sensor import DEFAULT_LED_LEVEL, default_config_path, open_sensor, resolve_settings
 
 
 def parse_args() -> argparse.Namespace:
@@ -22,6 +22,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--seconds", type=float, default=60.0)
     p.add_argument("--target-hz", type=float, default=30.0)
     p.add_argument("--log-dir", default="logs")
+    p.add_argument("--stream-led-on", action="store_true")
+    p.add_argument("--stream-led-level", type=int, default=DEFAULT_LED_LEVEL)
     p.add_argument("--max-error-rate", type=float, default=0.01)
     p.add_argument("--max-jitter-ratio", type=float, default=0.40)
     p.add_argument("--min-speed-counts-s", type=float, default=0.0)
@@ -50,6 +52,8 @@ def main() -> int:
         args.max_error_rate,
         args.max_jitter_ratio,
         args.min_speed_counts_s,
+        args.stream_led_on,
+        args.stream_led_level,
         args.include_mem,
     )
 

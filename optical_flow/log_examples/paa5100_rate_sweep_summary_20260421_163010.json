@@ -1,0 +1,16 @@
+{
+  "csv_path": "optical_flow/logs/paa5100_rate_sweep_20260421_163003.csv",
+  "highest_stable_hz": 0.0,
+  "hold_s": 1.2,
+  "include_mem": false,
+  "kind": "paa5100_rate_sweep_summary",
+  "max_error_rate": 0.01,
+  "max_jitter_ratio": 0.4,
+  "process_mem_kb_delta": 0,
+  "process_mem_kb_end": 16592,
+  "process_mem_kb_start": 16592,
+  "start_hz": 5.0,
+  "step_hz": 5.0,
+  "stop_hz": 15.0,
+  "timestamp": "2026-04-21T16:30:10.657"
+}

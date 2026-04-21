@@ -1,0 +1,13 @@
+{
+  "csv_path": "optical_flow/logs/paa5100_comm_20260421_162925.csv",
+  "error_rate": 0.0,
+  "failed": 0,
+  "include_mem": false,
+  "kind": "paa5100_comm_log_summary",
+  "ok": 20,
+  "process_mem_kb_delta": 0,
+  "process_mem_kb_end": 18128,
+  "process_mem_kb_start": 18128,
+  "samples": 20,
+  "timestamp": "2026-04-21T16:29:26.596"
+}

@@ -1,0 +1,23 @@
+{
+  "csv_path": "optical_flow/logs/paa5100_benchmark_20260421_162959.csv",
+  "dt_jitter_std_s": 0.17304252591577576,
+  "error_rate": 0.0,
+  "errors": 0,
+  "floor_hz": 1.3786021711529308,
+  "include_mem": false,
+  "kind": "paa5100_benchmark_summary",
+  "max_dt_s": 0.725372425000387,
+  "mean_dt_s": 0.06571542893743754,
+  "mean_hz": 15.217126573913426,
+  "min_dt_s": 0.00031096100065042265,
+  "p50_hz": 93.49621621030481,
+  "p95_hz": 3.537363598896981,
+  "p99_hz": 1.5702599731771412,
+  "peak_hz": 3215.837349083475,
+  "process_mem_kb_delta": 0,
+  "process_mem_kb_end": 16592,
+  "process_mem_kb_start": 16592,
+  "reads": 17,
+  "seconds": 3.0,
+  "timestamp": "2026-04-21T16:30:03.974"
+}

@@ -87,8 +87,9 @@ python src/paa5100_diagnostics.py --mode preflight
 # Communication samples
 python src/paa5100_diagnostics.py --mode comm --comm-samples 20
 
-# LED sanity blink
-python src/paa5100_diagnostics.py --mode led --blink-count 8 --blink-period 0.2 --led-level 28
+# LED sanity blink (default level is max brightness if omitted)
+python src/paa5100_diagnostics.py --mode led --blink-count 8 --blink-period 0.35
+python src/paa5100_diagnostics.py --mode led --blink-count 8 --blink-period 0.35 --led-level 28
 
 # Max poll-rate benchmark
 python src/paa5100_diagnostics.py --mode benchmark --bench-seconds 10
@@ -107,6 +108,9 @@ python src/paa5100_diagnostics.py --mode benchmark-log --bench-seconds 10 --log-
 
 # Continuous operation stream with reliability flags
 python src/paa5100_diagnostics.py --mode stream-log --stream-seconds 60 --stream-target-hz 30 --log-dir logs
+
+# Stream with LED forced on for low-light testing/calibration tuning
+python src/paa5100_diagnostics.py --mode stream-log --stream-seconds 60 --stream-target-hz 30 --stream-led-on --stream-led-level 213 --log-dir logs
 
 # Run all checks in sequence
 python src/paa5100_diagnostics.py --mode all
@@ -176,9 +180,11 @@ Examples:
 ```bash
 # smoke test
 python src/sensor_smoke.py --samples 10
+python src/sensor_smoke.py --samples 10 --led-level 213 --led-period 0.35
 
 # continuous stream logging
 python src/log_motion.py --seconds 60 --target-hz 30 --log-dir logs
+python src/log_motion.py --seconds 60 --target-hz 30 --stream-led-on --stream-led-level 213 --log-dir logs
 
 # benchmark + rate sweep
 python src/log_tests.py --mode both --bench-seconds 20 --log-dir logs
@@ -189,17 +195,8 @@ python src/main.py stream-log --seconds 60 --target-hz 30
 ```
 
 ## Logging Notes
-
-The first test script writes CSV logs in `logs/` with:
-
-- timestamp
-- sequence index
-- `dx`, `dy`
-- `dt_s`
-- estimated `vx_counts_s`, `vy_counts_s`
-- `spi_ok`
-- `led_action`
-- error text (if present)
+Key CSV/JSON outputs are produced by diagnostics and wrappers in `logs/`.
+For tracked references, see `optical_flow/log_examples/`.
 
 ## Troubleshooting
 
