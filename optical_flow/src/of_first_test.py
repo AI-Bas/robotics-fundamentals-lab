@@ -3,10 +3,10 @@
 Experimental reference wrapper.
 
 This script intentionally delegates to dedicated tools:
-- smoke / basic health -> sensor_smoke.py
-- detailed diagnostics -> paa5100_diagnostics.py
-- streaming logs -> log_motion.py
-- benchmark/sweep logs -> log_tests.py
+- smoke / basic health -> of_sensor_smoke.py
+- detailed diagnostics -> of_diagnostics.py
+- streaming logs -> of_log_motion.py
+- benchmark/sweep logs -> of_log_tests.py
 """
 
 from __future__ import annotations
@@ -37,10 +37,10 @@ def parse_args() -> tuple[argparse.Namespace, list[str]]:
 def main() -> int:
     args, extra = parse_args()
     if args.mode == "info":
-        return _run("sensor_smoke.py", extra)
+        return _run("of_sensor_smoke.py", extra)
     if args.mode == "led":
-        return _run("paa5100_diagnostics.py", ["--mode", "led", *extra])
-    return _run("log_motion.py", extra)
+        return _run("of_diagnostics.py", ["--mode", "led", *extra])
+    return _run("of_log_motion.py", extra)
 
 
 if __name__ == "__main__":

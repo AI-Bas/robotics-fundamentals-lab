@@ -6,5 +6,6 @@ This folder contains a curated reference set of CSV and JSON outputs generated b
 - `paa5100_benchmark_*.csv` + summary: benchmark telemetry
 - `paa5100_rate_sweep_*.csv` + summary: stable-rate sweep
 - `paa5100_stream_*.csv` + summary: continuous stream reliability
+- `paa5100_calibration_*.csv` + summary: brightness and scale calibration
 
 These files are intended as format references for tooling and ROS2 integration work.

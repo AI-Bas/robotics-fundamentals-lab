@@ -43,7 +43,7 @@ python -m pip install -r requirements.txt
 
 ## First Test Script (Experimental Wrapper)
 
-`src/paa5100_first_test.py` is kept as an experimental reference wrapper only.
+`src/of_first_test.py` is kept as an experimental reference wrapper only.
 Core functionality now lives in dedicated scripts by use case.
 
 Hardware and SPI defaults are read from:
@@ -56,25 +56,25 @@ Run:
 
 ```bash
 source .venv/bin/activate
-python src/paa5100_first_test.py --help
-python src/paa5100_first_test.py --mode info
+python src/of_first_test.py --help
+python src/of_first_test.py --mode info
 ```
 
 Recommended sequence (delegated wrappers):
 
-1. `python src/paa5100_first_test.py --mode info`
-2. `python src/paa5100_first_test.py --mode motion --seconds 15`
-3. `python src/paa5100_first_test.py --mode led --blink-count 6 --led-level 28`
+1. `python src/of_first_test.py --mode info`
+2. `python src/of_first_test.py --mode motion --seconds 15`
+3. `python src/of_first_test.py --mode led --led-mode blink --blink-count 6 --led-percent 30`
 
 If needed, override YAML values temporarily:
 
-- `python src/paa5100_first_test.py --mode led --spi-cs 0`
+- `python src/of_first_test.py --mode led --spi-cs 0`
 
 If LED control is not exposed in your local package version, use communication and stream modes for validation.
 
 ## Dedicated Diagnostics Script
 
-Use `src/paa5100_diagnostics.py` for repeatable hardware troubleshooting and quick benchmarking.
+Use `src/of_diagnostics.py` for repeatable hardware troubleshooting and quick benchmarking.
 
 Examples:
 
@@ -82,38 +82,39 @@ Examples:
 source .venv/bin/activate
 
 # Bus/wiring presence only
-python src/paa5100_diagnostics.py --mode preflight
+python src/of_diagnostics.py --mode preflight
 
 # Communication samples
-python src/paa5100_diagnostics.py --mode comm --comm-samples 20
+python src/of_diagnostics.py --mode comm --comm-samples 20
 
 # LED sanity blink (default level is max brightness if omitted)
-python src/paa5100_diagnostics.py --mode led --blink-count 8 --blink-period 0.35
-python src/paa5100_diagnostics.py --mode led --blink-count 8 --blink-period 0.35 --led-level 28
+python src/of_diagnostics.py --mode led --led-mode blink --blink-count 8 --blink-period 0.35
+python src/of_diagnostics.py --mode led --led-mode constant --blink-period 1.0 --led-percent 30
+python src/of_diagnostics.py --mode led --led-mode breathe --breathe-up-s 1.0 --breathe-down-s 1.0
 
 # Max poll-rate benchmark
-python src/paa5100_diagnostics.py --mode benchmark --bench-seconds 10
+python src/of_diagnostics.py --mode benchmark --bench-seconds 10
 
 # Max poll-rate benchmark + CSV telemetry
-python src/paa5100_diagnostics.py --mode benchmark-log --bench-seconds 10 --log-dir logs
+python src/of_diagnostics.py --mode benchmark-log --bench-seconds 10 --log-dir logs
 
 # Stable-rate sweep to estimate highest sustainable polling rate
-python src/paa5100_diagnostics.py --mode rate-sweep --sweep-start-hz 10 --sweep-stop-hz 140 --sweep-step-hz 10 --sweep-hold-s 2
+python src/of_diagnostics.py --mode rate-sweep --sweep-start-hz 10 --sweep-stop-hz 140 --sweep-step-hz 10 --sweep-hold-s 2
 
 # Communication samples + CSV telemetry
-python src/paa5100_diagnostics.py --mode comm-log --comm-samples 50 --log-dir logs
+python src/of_diagnostics.py --mode comm-log --comm-samples 50 --log-dir logs
 
 # Optional memory column (off by default to keep logging lean)
-python src/paa5100_diagnostics.py --mode benchmark-log --bench-seconds 10 --log-dir logs --include-mem
+python src/of_diagnostics.py --mode benchmark-log --bench-seconds 10 --log-dir logs --include-mem
 
 # Continuous operation stream with reliability flags
-python src/paa5100_diagnostics.py --mode stream-log --stream-seconds 60 --stream-target-hz 30 --log-dir logs
+python src/of_diagnostics.py --mode stream-log --stream-seconds 60 --stream-target-hz 30 --log-dir logs
 
 # Stream with LED forced on for low-light testing/calibration tuning
-python src/paa5100_diagnostics.py --mode stream-log --stream-seconds 60 --stream-target-hz 30 --stream-led-on --stream-led-level 213 --log-dir logs
+python src/of_diagnostics.py --mode stream-log --stream-seconds 60 --stream-target-hz 30 --stream-led-on --stream-led-percent 100 --log-dir logs
 
 # Run all checks in sequence
-python src/paa5100_diagnostics.py --mode all
+python src/of_diagnostics.py --mode all
 ```
 
 CSV logs include timing/error fields, monotonic/process clock stamps, motion deltas, scalar flow speed, and flow heading.
@@ -136,7 +137,7 @@ This single optical flow sensor does not directly report yaw/rotation rate. You 
 - Export measured diagnostics into ROS2 parameter YAML:
 
 ```bash
-python src/export_ros2_profile.py --log-dir logs --output config/ros2_optical_flow_profile.yaml --node-name optical_flow_node
+python src/of_export_ros2_profile.py --log-dir logs --output config/ros2_optical_flow_profile.yaml --node-name optical_flow_node
 ```
 
 - Result file is designed for ROS2 node parameters (`ros__parameters`) and includes:
@@ -167,31 +168,36 @@ Use the spinning-disk/known-velocity procedure in `CALIBRATION_PROTOCOL.md` to c
 
 To keep use-cases separated while developing in Python:
 
-- `src/sensor_smoke.py` - fast health/smoke verification
-- `src/paa5100_first_test.py` - experimental reference wrapper (delegates by mode)
-- `src/paa5100_diagnostics.py` - deep troubleshooting, streaming, benchmark, sweep
-- `src/log_motion.py` - continuous stream logging wrapper
-- `src/log_tests.py` - benchmark/sweep wrapper
-- `src/export_ros2_profile.py` - diagnostics -> ROS2 parameter YAML
-- `src/main.py` - simple top-level task router
+- `src/of_sensor.py` - shared sensor interaction and LED control primitives
+- `src/of_sensor_smoke.py` - fast health/smoke verification
+- `src/of_first_test.py` - experimental reference wrapper (delegates by mode)
+- `src/of_diagnostics.py` - deep troubleshooting, streaming, benchmark, sweep
+- `src/of_log_motion.py` - continuous stream logging wrapper
+- `src/of_log_tests.py` - benchmark/sweep wrapper
+- `src/of_calibration.py` - brightness/scale calibration for profile updates
+- `src/of_export_ros2_profile.py` - diagnostics -> ROS2 parameter YAML
+- `src/of_main.py` - simple top-level task router
 
 Examples:
 
 ```bash
 # smoke test
-python src/sensor_smoke.py --samples 10
-python src/sensor_smoke.py --samples 10 --led-level 213 --led-period 0.35
+python src/of_sensor_smoke.py --samples 10
+python src/of_sensor_smoke.py --samples 10 --led-up-s 1.0 --led-down-s 1.0
 
 # continuous stream logging
-python src/log_motion.py --seconds 60 --target-hz 30 --log-dir logs
-python src/log_motion.py --seconds 60 --target-hz 30 --stream-led-on --stream-led-level 213 --log-dir logs
+python src/of_log_motion.py --seconds 60 --target-hz 30 --log-dir logs
+python src/of_log_motion.py --seconds 60 --target-hz 30 --stream-led-on --stream-led-percent 100 --log-dir logs
 
 # benchmark + rate sweep
-python src/log_tests.py --mode both --bench-seconds 20 --log-dir logs
+python src/of_log_tests.py --mode both --bench-seconds 20 --log-dir logs
+
+# calibration (stationary + known velocity reference)
+python src/of_calibration.py --target-hz 20 --window-s 3 --reference-velocity-mps 0.5 --log-dir logs
 
 # task router variant
-python src/main.py smoke --samples 10
-python src/main.py stream-log --seconds 60 --target-hz 30
+python src/of_main.py smoke --samples 10
+python src/of_main.py stream-log --seconds 60 --target-hz 30
 ```
 
 ## Logging Notes

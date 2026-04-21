@@ -8,8 +8,8 @@ from __future__ import annotations
 import argparse
 import sys
 
-from paa5100_diagnostics import run_preflight, run_stream_log
-from sensor import DEFAULT_LED_LEVEL, default_config_path, open_sensor, resolve_settings
+from of_diagnostics import run_preflight, run_stream_log
+from of_sensor import default_config_path, open_sensor, resolve_settings
 
 
 def parse_args() -> argparse.Namespace:
@@ -23,7 +23,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--target-hz", type=float, default=30.0)
     p.add_argument("--log-dir", default="logs")
     p.add_argument("--stream-led-on", action="store_true")
-    p.add_argument("--stream-led-level", type=int, default=DEFAULT_LED_LEVEL)
+    p.add_argument("--stream-led-percent", type=float, default=None)
+    p.add_argument("--stream-led-level", type=int, default=None, help="Deprecated raw level; prefer --stream-led-percent")
     p.add_argument("--max-error-rate", type=float, default=0.01)
     p.add_argument("--max-jitter-ratio", type=float, default=0.40)
     p.add_argument("--min-speed-counts-s", type=float, default=0.0)
@@ -53,7 +54,7 @@ def main() -> int:
         args.max_jitter_ratio,
         args.min_speed_counts_s,
         args.stream_led_on,
-        args.stream_led_level,
+        args.stream_led_percent if args.stream_led_percent is not None else ((args.stream_led_level / 213.0) * 100.0 if args.stream_led_level is not None else None),
         args.include_mem,
     )
 

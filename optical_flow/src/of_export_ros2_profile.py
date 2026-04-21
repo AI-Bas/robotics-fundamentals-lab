@@ -57,11 +57,13 @@ def main() -> int:
     bench_path = _latest_file(args.log_dir, "paa5100_benchmark_summary_", ".json")
     stream_path = _latest_file(args.log_dir, "paa5100_stream_summary_", ".json")
     comm_path = _latest_file(args.log_dir, "paa5100_comm_summary_", ".json")
+    calib_path = _latest_file(args.log_dir, "paa5100_calibration_", ".json")
 
     sweep = _read_json(sweep_path)
     bench = _read_json(bench_path)
     stream = _read_json(stream_path)
     comm = _read_json(comm_path)
+    calib = _read_json(calib_path)
 
     poll_hz = _recommended_poll_hz(sweep, bench, args.safety_factor)
     unreliable_error_rate = max(
@@ -84,15 +86,17 @@ def main() -> int:
                     "require_nonzero_motion": False,
                 },
                 "calibration": {
-                    "counts_to_mps_scale": 0.0,
-                    "scale_source": "unset",
-                    "notes": "Set after disk/ball calibration protocol.",
+                    "counts_to_mps_scale": float(calib.get("counts_to_mps_scale", 0.0) or 0.0),
+                    "brightness_percent_optimal": float(calib.get("best_brightness_percent", 100.0) or 100.0),
+                    "scale_source": calib_path or "unset",
+                    "notes": "Run of_calibration.py with reference velocity for final scale.",
                 },
                 "diagnostics_source_files": {
                     "comm_summary": comm_path or "",
                     "benchmark_summary": bench_path or "",
                     "rate_sweep_summary": sweep_path or "",
                     "stream_summary": stream_path or "",
+                    "calibration_summary": calib_path or "",
                 },
                 "generated_at": datetime.now().isoformat(timespec="seconds"),
             }

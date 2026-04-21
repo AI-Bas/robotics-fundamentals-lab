@@ -8,8 +8,8 @@ from __future__ import annotations
 import argparse
 import sys
 
-from paa5100_diagnostics import run_poll_benchmark_log, run_preflight, run_stable_rate_sweep
-from sensor import default_config_path, open_sensor, resolve_settings
+from of_diagnostics import run_poll_benchmark_log, run_preflight, run_stable_rate_sweep
+from of_sensor import default_config_path, open_sensor, resolve_settings
 
 
 def parse_args() -> argparse.Namespace:

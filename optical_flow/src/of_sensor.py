@@ -8,11 +8,13 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from typing import Callable, Optional
+import time
 
 import yaml
 from pmw3901 import PAA5100
 
-DEFAULT_LED_LEVEL = 0xD5
+_LED_LEVEL_MAX = 0xD5
+_LED_LEVEL_MIN = 0x00
 
 
 @dataclass
@@ -133,10 +135,63 @@ def led_setter(sensor: PAA5100) -> tuple[Optional[Callable[[bool, int], None]], 
     return None, "no LED control path"
 
 
-def set_led(sensor: PAA5100, on: bool, level: int | None = None) -> tuple[bool, str]:
+def percent_to_led_level(percent: float | int | None) -> int:
+    if percent is None:
+        return _LED_LEVEL_MAX
+    pct = max(0.0, min(100.0, float(percent)))
+    return int(round(_LED_LEVEL_MIN + (_LED_LEVEL_MAX - _LED_LEVEL_MIN) * (pct / 100.0)))
+
+
+def set_led(sensor: PAA5100, on: bool, percent: float | int | None = None) -> tuple[bool, str]:
     setter, source = led_setter(sensor)
     if setter is None:
         return False, source
-    effective = DEFAULT_LED_LEVEL if level is None else level
+    effective = percent_to_led_level(percent)
     setter(on, effective)
     return True, source
+
+
+def led_blink(
+    sensor: PAA5100,
+    *,
+    blinks: int = 2,
+    period_s: float = 0.35,
+    percent: float | int | None = None,
+) -> tuple[bool, str]:
+    ok, source = True, "unknown"
+    for _ in range(max(1, blinks)):
+        ok, source = set_led(sensor, True, percent)
+        if not ok:
+            return ok, source
+        time.sleep(max(0.0, period_s))
+        ok, source = set_led(sensor, False, percent)
+        if not ok:
+            return ok, source
+        time.sleep(max(0.0, period_s))
+    return ok, source
+
+
+def led_breathe(
+    sensor: PAA5100,
+    *,
+    up_seconds: float = 1.0,
+    down_seconds: float = 1.0,
+    steps: int = 20,
+) -> tuple[bool, str]:
+    source = "unknown"
+    n = max(2, steps)
+    up_dt = max(0.0, up_seconds) / (n - 1)
+    down_dt = max(0.0, down_seconds) / (n - 1)
+    for i in range(n):
+        pct = (i * 100.0) / (n - 1)
+        ok, source = set_led(sensor, True, pct)
+        if not ok:
+            return ok, source
+        time.sleep(up_dt)
+    for i in range(n):
+        pct = 100.0 - (i * 100.0) / (n - 1)
+        ok, source = set_led(sensor, True, pct)
+        if not ok:
+            return ok, source
+        time.sleep(down_dt)
+    return set_led(sensor, False, 0)

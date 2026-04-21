@@ -1,0 +1,11 @@
+{
+  "best_brightness_percent": 20.0,
+  "counts_to_mps_scale": 0.0,
+  "csv_path": "optical_flow/logs/paa5100_calibration_20260421_171726.csv",
+  "kind": "paa5100_calibration_summary",
+  "moving_speed_counts_s": 0.0,
+  "recommended_poll_hz": 10.0,
+  "reference_velocity_mps": 0.0,
+  "stationary_speed_counts_s": 35.04536356407583,
+  "timestamp": "2026-04-21T17:17:32.200"
+}

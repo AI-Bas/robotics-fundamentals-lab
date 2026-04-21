@@ -27,7 +27,8 @@ def parse_args() -> argparse.Namespace:
             "first-test",
             "diagnostics",
             "stream-log",
-        "log-tests",
+            "log-tests",
+            "calibration",
             "export-ros2-profile",
         ],
     )
@@ -38,12 +39,13 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     mapping = {
-        "smoke": "sensor_smoke.py",
-        "first-test": "paa5100_first_test.py",
-        "diagnostics": "paa5100_diagnostics.py",
-        "stream-log": "log_motion.py",
-        "log-tests": "log_tests.py",
-        "export-ros2-profile": "export_ros2_profile.py",
+        "smoke": "of_sensor_smoke.py",
+        "first-test": "of_first_test.py",
+        "diagnostics": "of_diagnostics.py",
+        "stream-log": "of_log_motion.py",
+        "log-tests": "of_log_tests.py",
+        "calibration": "of_calibration.py",
+        "export-ros2-profile": "of_export_ros2_profile.py",
     }
     return _run(mapping[args.task], args.extra)
 

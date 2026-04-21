@@ -7,10 +7,9 @@ from __future__ import annotations
 
 import argparse
 import sys
-import time
 
-from paa5100_diagnostics import _sensor_probe, run_comm, run_preflight
-from sensor import DEFAULT_LED_LEVEL, led_setter, default_config_path, open_sensor, resolve_settings
+from of_diagnostics import _sensor_probe, run_comm, run_preflight
+from of_sensor import default_config_path, led_breathe, open_sensor, resolve_settings
 
 
 def parse_args() -> argparse.Namespace:
@@ -22,9 +21,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--no-auto-cs", action="store_true")
     p.add_argument("--samples", type=int, default=8)
     p.add_argument("--skip-led-check", action="store_true")
-    p.add_argument("--led-level", type=int, default=DEFAULT_LED_LEVEL)
-    p.add_argument("--led-blinks", type=int, default=2)
-    p.add_argument("--led-period", type=float, default=0.35)
+    p.add_argument("--led-up-s", type=float, default=1.0)
+    p.add_argument("--led-down-s", type=float, default=1.0)
+    p.add_argument("--led-steps", type=int, default=20)
     return p.parse_args()
 
 
@@ -45,18 +44,14 @@ def main() -> int:
     if probe:
         print("sensor probe: " + ", ".join(f"{k}={v}" for k, v in sorted(probe.items())))
     if not args.skip_led_check:
-        set_led, source = led_setter(sensor)
-        print(f"smoke led path: {source}")
-        if set_led is None:
+        print(
+            f"smoke led breathe cycle: up={args.led_up_s:.2f}s down={args.led_down_s:.2f}s "
+            f"steps={args.led_steps}"
+        )
+        ok, src = led_breathe(sensor, up_seconds=args.led_up_s, down_seconds=args.led_down_s, steps=args.led_steps)
+        print(f"smoke led path: {src}")
+        if not ok:
             print("smoke led check: unavailable")
-        else:
-            for i in range(max(1, args.led_blinks)):
-                set_led(True, args.led_level)
-                print(f"smoke led blink {i + 1}/{args.led_blinks}: ON (level={args.led_level})")
-                time.sleep(args.led_period)
-                set_led(False, args.led_level)
-                print(f"smoke led blink {i + 1}/{args.led_blinks}: OFF")
-                time.sleep(args.led_period)
     return run_comm(sensor, args.samples)
 
 

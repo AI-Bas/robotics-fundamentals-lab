@@ -23,7 +23,7 @@ from datetime import datetime
 from typing import Optional
 
 from pmw3901 import PAA5100
-from sensor import DEFAULT_LED_LEVEL, default_config_path, led_setter, set_led, open_sensor, resolve_settings
+from of_sensor import default_config_path, led_breathe, set_led, open_sensor, resolve_settings
 
 
 def _now_iso() -> str:
@@ -233,21 +233,42 @@ def run_comm_log(sensor: PAA5100, samples: int, log_dir: str, include_mem: bool)
     return 0 if ok > 0 and failed == 0 else 1
 
 
-def run_led(sensor: PAA5100, blink_count: int, blink_period: float, led_level: int) -> int:
+def run_led(
+    sensor: PAA5100,
+    led_mode: str,
+    blink_count: int,
+    blink_period: float,
+    led_percent: float | None,
+    breathe_up_s: float,
+    breathe_down_s: float,
+    breathe_steps: int,
+) -> int:
     print("=== LED Sanity Check ===")
-    set_led, source = led_setter(sensor)
-    print(f"led path: {source}")
-    if set_led is None:
+    test_ok, source = set_led(sensor, True, led_percent)
+    if not test_ok:
         print("FAIL: LED control path not available in this package version.")
         return 2
+    set_led(sensor, False, 0)
+    print(f"led path: {source}")
     try:
-        for i in range(blink_count):
-            set_led(True, led_level)
-            print(f"{_now_iso()} blink {i + 1}/{blink_count}: ON (level={led_level})")
+        if led_mode == "constant":
+            pct = 100.0 if led_percent is None else led_percent
+            set_led(sensor, True, pct)
+            print(f"{_now_iso()} constant ON: {pct:.1f}%")
             time.sleep(blink_period)
-            set_led(False, led_level)
-            print(f"{_now_iso()} blink {i + 1}/{blink_count}: OFF")
-            time.sleep(blink_period)
+            set_led(sensor, False, 0)
+        elif led_mode == "breathe":
+            print(f"{_now_iso()} breathe: up={breathe_up_s}s down={breathe_down_s}s steps={breathe_steps}")
+            led_breathe(sensor, up_seconds=breathe_up_s, down_seconds=breathe_down_s, steps=breathe_steps)
+        else:
+            for i in range(blink_count):
+                pct = 100.0 if led_percent is None else led_percent
+                set_led(sensor, True, pct)
+                print(f"{_now_iso()} blink {i + 1}/{blink_count}: ON ({pct:.1f}%)")
+                time.sleep(blink_period)
+                set_led(sensor, False, 0)
+                print(f"{_now_iso()} blink {i + 1}/{blink_count}: OFF")
+                time.sleep(blink_period)
     except Exception as exc:  # pragma: no cover (hardware path)
         print(f"FAIL: LED check failed: {exc!r}")
         return 1
@@ -558,7 +579,7 @@ def run_stream_log(
     max_jitter_ratio: float,
     min_speed_counts_s: float,
     stream_led_on: bool,
-    stream_led_level: int,
+    stream_led_percent: float | None,
     include_mem: bool,
 ) -> int:
     print("=== Continuous Stream Log ===")
@@ -575,8 +596,9 @@ def run_stream_log(
     t_prev: Optional[float] = None
     mem0 = _process_memory_kb()
     if stream_led_on:
-        ok_led, src_led = set_led(sensor, True, stream_led_level)
-        print(f"stream led: {'enabled' if ok_led else 'unavailable'} via {src_led}, level={stream_led_level}")
+        ok_led, src_led = set_led(sensor, True, stream_led_percent)
+        pct = 100.0 if stream_led_percent is None else stream_led_percent
+        print(f"stream led: {'enabled' if ok_led else 'unavailable'} via {src_led}, percent={pct:.1f}%")
 
     with open(csv_path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
@@ -658,7 +680,7 @@ def run_stream_log(
                 next_tick += target_dt
 
     if stream_led_on:
-        set_led(sensor, False, stream_led_level)
+        set_led(sensor, False, 0)
 
     mem1 = _process_memory_kb()
     jitter = statistics.pstdev(dts) if len(dts) > 1 else 0.0
@@ -690,7 +712,7 @@ def run_stream_log(
         "jitter_ratio_to_target_dt": jitter_ratio,
         "mean_speed_counts_s": speed_mean,
         "stream_led_on": stream_led_on,
-        "stream_led_level": stream_led_level if stream_led_on else None,
+        "stream_led_percent": (100.0 if stream_led_percent is None else stream_led_percent) if stream_led_on else None,
         "stream_reliable": len(unreliable_reasons) == 0,
         "unreliable_reasons": unreliable_reasons,
         "thresholds": {
@@ -724,13 +746,18 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--rotation", type=int, default=None, choices=[0, 90, 180, 270])
     p.add_argument("--no-auto-cs", action="store_true")
     p.add_argument("--comm-samples", type=int, default=12)
+    p.add_argument("--led-mode", choices=["blink", "constant", "breathe"], default="blink")
     p.add_argument("--blink-count", type=int, default=4)
     p.add_argument("--blink-period", type=float, default=0.35)
+    p.add_argument("--led-percent", type=float, default=None, help="0..100; if omitted, defaults to max on-brightness")
+    p.add_argument("--breathe-up-s", type=float, default=1.0)
+    p.add_argument("--breathe-down-s", type=float, default=1.0)
+    p.add_argument("--breathe-steps", type=int, default=20)
     p.add_argument(
         "--led-level",
         type=int,
-        default=DEFAULT_LED_LEVEL,
-        help="LED brightness register value 0..213 (0xD5), default=max",
+        default=None,
+        help="Deprecated raw 0..213 level. Prefer --led-percent.",
     )
     p.add_argument("--bench-seconds", type=float, default=5.0)
     p.add_argument("--log-dir", default="logs")
@@ -743,7 +770,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--stream-seconds", type=float, default=30.0)
     p.add_argument("--stream-target-hz", type=float, default=30.0)
     p.add_argument("--stream-led-on", action="store_true", help="Enable sensor LED continuously during stream logging")
-    p.add_argument("--stream-led-level", type=int, default=DEFAULT_LED_LEVEL, help="LED level used when stream LED is on")
+    p.add_argument("--stream-led-percent", type=float, default=None, help="0..100, defaults to max when enabled")
+    p.add_argument("--stream-led-level", type=int, default=None, help="Deprecated raw level; prefer --stream-led-percent")
     p.add_argument("--min-speed-counts-s", type=float, default=0.0)
     p.add_argument("--include-mem", action="store_true", help="Include process_mem_kb columns in CSV logs")
     return p.parse_args()
@@ -759,6 +787,10 @@ def main() -> int:
         no_auto_cs=args.no_auto_cs,
     )
     cfg = settings.cfg
+    stream_led_percent = args.stream_led_percent
+    if stream_led_percent is None and args.stream_led_level is not None:
+        stream_led_percent = (args.stream_led_level / 213.0) * 100.0
+
     spi_port = settings.spi_port
     spi_cs = settings.spi_cs
     rotation = settings.rotation
@@ -788,7 +820,19 @@ def main() -> int:
     if args.mode == "comm-log":
         return run_comm_log(sensor, args.comm_samples, args.log_dir, args.include_mem)
     if args.mode == "led":
-        return run_led(sensor, args.blink_count, args.blink_period, args.led_level)
+        led_pct = args.led_percent
+        if led_pct is None and args.led_level is not None:
+            led_pct = (args.led_level / 213.0) * 100.0
+        return run_led(
+            sensor,
+            args.led_mode,
+            args.blink_count,
+            args.blink_period,
+            led_pct,
+            args.breathe_up_s,
+            args.breathe_down_s,
+            args.breathe_steps,
+        )
     if args.mode == "benchmark":
         return run_poll_benchmark(sensor, args.bench_seconds)
     if args.mode == "benchmark-log":
@@ -815,13 +859,22 @@ def main() -> int:
             args.max_jitter_ratio,
             args.min_speed_counts_s,
             args.stream_led_on,
-            args.stream_led_level,
+            stream_led_percent,
             args.include_mem,
         )
 
     results = [
         run_comm(sensor, args.comm_samples),
-        run_led(sensor, args.blink_count, args.blink_period, args.led_level),
+        run_led(
+            sensor,
+            args.led_mode,
+            args.blink_count,
+            args.blink_period,
+            args.led_percent,
+            args.breathe_up_s,
+            args.breathe_down_s,
+            args.breathe_steps,
+        ),
         run_poll_benchmark_log(sensor, args.bench_seconds, args.log_dir, args.include_mem),
         run_stable_rate_sweep(
             sensor,
@@ -843,7 +896,7 @@ def main() -> int:
             args.max_jitter_ratio,
             args.min_speed_counts_s,
             args.stream_led_on,
-            args.stream_led_level,
+            stream_led_percent,
             args.include_mem,
         ),
     ]
