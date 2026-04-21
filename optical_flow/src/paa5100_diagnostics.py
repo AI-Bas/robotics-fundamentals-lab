@@ -24,57 +24,11 @@ from typing import Callable, Optional
 
 import yaml
 from pmw3901 import PAA5100
+from sensor import default_config_path, led_setter, open_sensor, resolve_settings
 
 
 def _now_iso() -> str:
     return datetime.now().isoformat(timespec="milliseconds")
-
-
-def _default_config_path() -> str:
-    here = os.path.dirname(__file__)
-    return os.path.abspath(os.path.join(here, "..", "config", "sensor_config.yaml"))
-
-
-def _load_config(path: str) -> dict:
-    if not os.path.exists(path):
-        print(f"Config not found at {path}. Using CLI defaults.")
-        return {}
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {}
-        return data if isinstance(data, dict) else {}
-    except Exception as exc:
-        print(f"Failed to parse config: {exc!r}. Using CLI defaults.")
-        return {}
-
-
-def _cfg_int(cfg: dict, key_path: list[str], default: int) -> int:
-    node = cfg
-    for key in key_path:
-        if not isinstance(node, dict) or key not in node:
-            return default
-        node = node[key]
-    try:
-        return int(node)
-    except (TypeError, ValueError):
-        return default
-
-
-def _cfg_bool(cfg: dict, key_path: list[str], default: bool) -> bool:
-    node = cfg
-    for key in key_path:
-        if not isinstance(node, dict) or key not in node:
-            return default
-        node = node[key]
-    if isinstance(node, bool):
-        return node
-    if isinstance(node, str):
-        value = node.strip().lower()
-        if value in {"1", "true", "yes", "on", "y"}:
-            return True
-        if value in {"0", "false", "no", "off", "n"}:
-            return False
-    return default
 
 
 def _print_pin_map(cfg: dict) -> None:
@@ -165,55 +119,6 @@ def _quantile(sorted_values: list[float], q: float) -> float:
     hi = min(lo + 1, len(sorted_values) - 1)
     w = idx - lo
     return sorted_values[lo] * (1 - w) + sorted_values[hi] * w
-
-
-def _build_sensor(spi_port: int, spi_cs: int, rotation: int) -> PAA5100:
-    sensor = PAA5100(spi_port=spi_port, spi_cs=spi_cs)
-    sensor.set_rotation(rotation)
-    return sensor
-
-
-def open_sensor(spi_port: int, spi_cs: int, rotation: int, auto_cs: bool) -> PAA5100:
-    order = [spi_cs]
-    if auto_cs and spi_cs in (0, 1):
-        other = 1 - spi_cs
-        if other not in order:
-            order.append(other)
-
-    last: Optional[Exception] = None
-    for cs in order:
-        try:
-            sensor = _build_sensor(spi_port, cs, rotation)
-            if cs != spi_cs:
-                print(f"init fallback: preferred cs={spi_cs} failed; using cs={cs}")
-            else:
-                print(f"init ok on spi_port={spi_port}, cs={cs}")
-            return sensor
-        except Exception as exc:  # pragma: no cover (hardware path)
-            last = exc
-            print(f"init failed on spi_port={spi_port}, cs={cs}: {exc!r}")
-
-    assert last is not None
-    raise last
-
-
-def _make_led_setter(sensor: PAA5100) -> tuple[Optional[Callable[[bool, int], None]], str]:
-    if hasattr(sensor, "set_led"):
-        method = getattr(sensor, "set_led")
-        if callable(method):
-            def _setter(on: bool, level: int) -> None:
-                # High-level API may only support on/off.
-                method(on)
-            return _setter, "set_led(bool)"
-    write_fn = getattr(sensor, "_write", None)
-    if callable(write_fn):
-        def _setter(on: bool, level: int) -> None:
-            level = max(0, min(0xD5, int(level)))
-            write_fn(0x7F, 0x14)
-            write_fn(0x6F, level if on else 0x00)
-            write_fn(0x7F, 0x00)
-        return _setter, "private _write(register, value)"
-    return None, "no LED control path"
 
 
 def run_preflight(cfg: dict, spi_port: int, spi_cs: int) -> int:
@@ -331,7 +236,7 @@ def run_comm_log(sensor: PAA5100, samples: int, log_dir: str, include_mem: bool)
 
 def run_led(sensor: PAA5100, blink_count: int, blink_period: float, led_level: int) -> int:
     print("=== LED Sanity Check ===")
-    set_led, source = _make_led_setter(sensor)
+    set_led, source = led_setter(sensor)
     print(f"led path: {source}")
     if set_led is None:
         print("FAIL: LED control path not available in this package version.")
@@ -799,7 +704,7 @@ def run_stream_log(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="PAA5100 diagnostics and poll benchmark")
-    p.add_argument("--config", default=_default_config_path(), help="Path to sensor YAML config")
+    p.add_argument("--config", default=default_config_path(), help="Path to sensor YAML config")
     p.add_argument(
         "--mode",
         choices=["preflight", "comm", "comm-log", "led", "benchmark", "benchmark-log", "rate-sweep", "stream-log", "all"],
@@ -830,12 +735,18 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    cfg = _load_config(args.config)
-    spi_port = args.spi_port if args.spi_port is not None else _cfg_int(cfg, ["spi", "port"], 0)
-    spi_cs = args.spi_cs if args.spi_cs is not None else _cfg_int(cfg, ["spi", "cs"], 1)
-    rotation = args.rotation if args.rotation is not None else _cfg_int(cfg, ["sensor_runtime", "rotation"], 0)
-    auto_cs_cfg = _cfg_bool(cfg, ["spi", "auto_cs"], True)
-    auto_cs = (not args.no_auto_cs) and auto_cs_cfg
+    settings = resolve_settings(
+        config_path=args.config,
+        spi_port_override=args.spi_port,
+        spi_cs_override=args.spi_cs,
+        rotation_override=args.rotation,
+        no_auto_cs=args.no_auto_cs,
+    )
+    cfg = settings.cfg
+    spi_port = settings.spi_port
+    spi_cs = settings.spi_cs
+    rotation = settings.rotation
+    auto_cs = settings.auto_cs
 
     print(f"config: {args.config}")
     print(f"effective settings: spi_port={spi_port}, spi_cs={spi_cs}, rotation={rotation}, auto_cs={auto_cs}")
