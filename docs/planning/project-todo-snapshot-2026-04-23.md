@@ -1,11 +1,11 @@
-# Ball Rotation Project TODO
+# Project TODO Snapshot (2026-04-23)
 
-This file is the module switchboard and working backlog for the full platform.
-Use it as the first stop each session.
+Source at snapshot time: `docs/project-todo.md`  
+Purpose: preserve migration checkpoint of the active backlog.
 
-Planning snapshots and imported plans live in `docs/planning/`, but long-term updates must be made in this file and other canonical docs.
+## Snapshot
 
-## Module Switchboard
+### Module Switchboard
 
 - Optical flow: `docs/modules/optical-flow.md`
 - Power monitor: `docs/modules/power-monitor.md`
@@ -15,14 +15,14 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
 - ROS2 and HMI integration: `docs/modules/ros2-hmi-integration.md`
 - Shared conventions: `docs/conventions.md`
 
-## Status Legend
+### Status Legend
 
 - `todo`: not started
 - `doing`: active now
 - `blocked`: waiting on hardware/info
 - `done`: completed and validated
 
-## Today Focus
+### Today Focus
 
 - Active module: `optical_flow`
 - Current objective: finish optical-flow polish and lock interfaces before building new modules.
@@ -31,9 +31,9 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
   - `of_experimental.py` redundancy decisions documented.
   - LDR LUT experiment pipeline drafted and ready for Maker Pi ADC wiring.
 
-## Backlog By Module
+### Backlog By Module
 
-### Optical Flow (Priority 1)
+#### Optical Flow (Priority 1)
 
 - `doing` Add primary CLI usage guidance for `of_main.py` including SSH run examples.
 - `todo` Review `of_experimental.py` and keep only truly experimental entrypoints.
@@ -42,7 +42,7 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
 - `todo` Consolidate naming, comments, and argument consistency across all `of_*` scripts.
 - `todo` Define ROS2-ready optical flow outputs and parameter profile contract.
 
-### Power Monitor (Priority 2)
+#### Power Monitor (Priority 2)
 
 - `todo` Create `power_monitor/` module structure and starter docs.
 - `todo` Define INA219 4-channel smoke test and baseline polling checks.
@@ -51,7 +51,7 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
 - `todo` Define polling bandwidth optimization and I2C bus protection strategy.
 - `todo` Define logging and graph outputs and ROS2 mapping for safety events.
 
-### Camera and AI (Priority 3)
+#### Camera and AI (Priority 3)
 
 - `todo` Create `vision_camera/` module structure and starter docs.
 - `todo` Define local and SSH camera feed bring-up path.
@@ -59,7 +59,7 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
 - `todo` Document AI HAT setup assumptions and validation checkpoints.
 - `todo` Draft first object/ball seam tracking experiment outputs.
 
-### Modular I/O (Priority 4)
+#### Modular I/O (Priority 4)
 
 - `todo` Create `modular_io/` module structure and starter docs.
 - `todo` Define USB serial protocol shape for Maker Pi to Pi data exchange.
@@ -67,7 +67,7 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
 - `todo` Define first ToF/ultrasonic and buttons/encoder/OLED smoke tests.
 - `todo` Define ROS2 bridge requirements for modular sensor/control data.
 
-### Motor Control (Priority 5)
+#### Motor Control (Priority 5)
 
 - `todo` Expand `motor_control/` docs and C++-first implementation plan.
 - `todo` Define communication fallback matrix (packet serial, USB bench-only, alternatives).
@@ -76,42 +76,10 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
 - `todo` Define safety-state handling: estop, overvoltage, faults, brownout recovery.
 - `todo` Define runtime parameter tuning surface (PID, setpoints, limits).
 
-### ROS2 and HMI Integration (Priority 6)
+#### ROS2 and HMI Integration (Priority 6)
 
 - `todo` Define node boundaries and topic/service contracts across modules.
 - `todo` Define profile and preset management strategy.
 - `todo` Define local touchscreen HMI and remote mirrored browser deployment flow.
 - `todo` Define centralized observability: logging, trend plots, event timeline.
 - `todo` Define integration smoke test for full-platform startup and degraded modes.
-
-## Troubleshooting Notes Template
-
-Copy this block into this section each time a major issue appears.
-
-```text
-Date:
-Module:
-Symptom:
-Context:
-Expected behavior:
-Observed behavior:
-Root cause:
-Fix applied:
-Verification command:
-Follow-up action:
-Status: todo/doing/blocked/done
-```
-
-## Troubleshooting Notes
-
-- Date: 2026-04-23
-  Module: optical_flow
-  Symptom: visual LED brightness response is non-linear/non-monotonic
-  Context: writes and register readback are valid, but visible output does not scale predictably
-  Expected behavior: monotonic change in visible brightness versus command value
-  Observed behavior: plateaus and jumps across command ranges
-  Root cause: pending confirmation; likely sensor LED driver behavior and ambient dependence
-  Fix applied: pending (planned LDR closed-loop LUT calibration)
-  Verification command: `python src/of_sensor_smoke.py --samples 4` and `python src/of_experimental.py --mode led-tune`
-  Follow-up action: implement LDR+ADC measurement capture and LUT generation
-  Status: doing

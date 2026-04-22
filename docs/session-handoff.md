@@ -3,46 +3,47 @@
 ## Snapshot
 
 - Branch: `main`
-- Sync: clean and up to date with `origin/main`
-- Focus: stabilize PAA5100 LED behavior for smoke diagnostics
-- Last validated command: `python src/of_sensor_smoke.py --samples 4`
-- Blocker: visual brightness remains non-linear/non-monotonic
+- Sync: ahead of `origin/main` by 1 local commit (`78712d8`)
+- Primary focus: docs architecture consolidation and canonical path cleanup
+- Last validated command: `git -C ~/robotics-fundamentals-lab status -sb`
+- Blocking issue: prior workspace path was symlink-based and is now removed
 
 ## Current State
 
 - **Done**
-  - Smoke flow standardized: pre-blink -> two ramp cycles -> comm check -> final magic-low.
-  - Added experimental LED tuning modes (`led-tune`, `led-sweep`) with readback reporting.
-  - Default percent mapping constrained to empirically visible raw range (`80..212`).
+  - Canonical repo path confirmed: `~/robotics-fundamentals-lab`.
+  - Alias symlinks removed: `~/robotics` and `~/robotics-fundementals-lab`.
+  - Project docs consolidated (`architecture`, `project-todo`, `conventions`, module docs).
+  - Safety commit created on `main`: `78712d8`.
 - **In progress**
-  - Empirical validation of visual brightness behavior under different ambient light.
+  - Reopen Cursor workspace against canonical path and continue module implementation.
 - **Not started**
-  - External brightness measurement loop (LDR + ADC) for lookup-table calibration.
+  - Push local commit to remote (optional, pending user confirmation).
 
 ## Validation
 
 - Commands:
-  - `python src/of_sensor_smoke.py --samples 4`
-  - `python src/of_experimental.py --mode led-tune`
+  - `pwd`
+  - `ls -ld /home/s3p/robotics-fundamentals-lab /home/s3p/robotics`
+  - `git -C /home/s3p/robotics-fundamentals-lab status -sb`
 - Observed:
-  - script-level writes/readbacks are correct
-  - visual output remains hardware-nonlinear
-- Confidence: medium-high (control path verified; visual linearity unresolved)
+  - canonical folder exists and is the only repository directory
+  - `/home/s3p/robotics` no longer exists
+  - repo is clean and ahead by 1 commit
+- Confidence: high (path and repo state verified directly)
 
 ## Next Action
 
 ```bash
-cd ~/robotics-fundamentals-lab/optical_flow
-source .venv/bin/activate
-python src/of_sensor_smoke.py --samples 4
-python src/of_experimental.py --mode led-tune
+cd ~/robotics-fundamentals-lab
+git status -sb
+# reopen Cursor in this folder as the only workspace root
 ```
 
 ## Risks / Assumptions
 
-- `0x6F` appears mode-like for some ranges, not visually linear.
-- Brightness response may depend on ambient light and sensor state.
-- Final perceptual control should be LUT-based once measured data exists.
+- Cursor workspace label may still show old naming until reopened from canonical path.
+- Local commit is not on remote yet.
 
 ## Process Rules
 

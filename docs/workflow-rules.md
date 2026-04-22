@@ -13,6 +13,9 @@ When documentation overlaps, use this precedence:
 3. `docs/conventions.md` (project-wide conventions)
 4. `docs/modules/*.md` (module-specific implementation details)
 5. `docs/session-handoff.md` (latest session snapshot)
+6. `docs/planning/*.md` (archived/imported planning snapshots; reference only)
+
+Long-term planning must live in the canonical docs (`architecture`, `project-todo`, `conventions`), not in snapshot files.
 
 ## Daily Working Rules
 
@@ -60,3 +63,4 @@ When documentation overlaps, use this precedence:
 
 - Avoid creating new top-level planning docs when an existing source-of-truth file already fits.
 - Consolidate old one-off plans into architecture, module docs, or project todo and then retire the redundant doc.
+- Keep `docs/planning/` for imported or milestone snapshots only.
