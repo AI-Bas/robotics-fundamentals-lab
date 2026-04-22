@@ -48,4 +48,7 @@ python src/of_experimental.py --mode led-tune
 
 - Use concise handoff format from `docs/session-handoff-template.md`.
 - Follow general workflow standards in `docs/workflow-rules.md`.
+- Track medium/long-term work in `docs/project-todo.md`.
+- Follow system targets in `docs/ball-rotation-architecture.md`.
+- Follow naming and structure from `docs/conventions.md`.
 

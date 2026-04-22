@@ -4,6 +4,16 @@
 
 Keep progress durable across sessions without bloating chat context or re-discovery time.
 
+## Source of Truth Order
+
+When documentation overlaps, use this precedence:
+
+1. `docs/ball-rotation-architecture.md` (system architecture and hardware references)
+2. `docs/project-todo.md` (active backlog, priorities, troubleshooting notes)
+3. `docs/conventions.md` (project-wide conventions)
+4. `docs/modules/*.md` (module-specific implementation details)
+5. `docs/session-handoff.md` (latest session snapshot)
+
 ## Daily Working Rules
 
 - Work in small, testable increments.
@@ -24,6 +34,7 @@ Keep progress durable across sessions without bloating chat context or re-discov
 - Keep handoff concise (20-30 lines).
 - Include one copy/paste restart block.
 - Move long investigation details into dedicated docs.
+- Keep long-term tasks out of handoff; place them in `docs/project-todo.md`.
 
 ## Verification Rules
 
@@ -44,3 +55,8 @@ Keep progress durable across sessions without bloating chat context or re-discov
 
 - Add external brightness feedback (LDR + ADC) before finalizing perceptual mapping.
 - Build LUT-based control once measured data is available.
+
+## Consolidation Rule
+
+- Avoid creating new top-level planning docs when an existing source-of-truth file already fits.
+- Consolidate old one-off plans into architecture, module docs, or project todo and then retire the redundant doc.

@@ -191,6 +191,57 @@ To keep use-cases separated while developing in Python:
 - `src/of_export_ros2_profile.py` - diagnostics -> ROS2 parameter YAML
 - `src/of_main.py` - simple top-level task router
 
+### Primary operator entrypoint (`of_main.py`)
+
+Use `of_main.py` as the default daily entrypoint to keep commands consistent.
+
+Examples:
+
+```bash
+# local shell
+python src/of_main.py smoke --samples 10
+python src/of_main.py stream-log --seconds 60 --target-hz 30
+python src/of_main.py graph --log-dir logs --out-dir logs/plots
+
+# remote SSH shell (same commands after ssh login and venv activate)
+ssh <user>@<pi-host>
+cd ~/robotics/optical_flow
+source .venv/bin/activate
+python src/of_main.py smoke --samples 10
+```
+
+Argument usage rule:
+
+- keep module-level options grouped by task name
+- prefer descriptive flags with explicit units (for example `--seconds`, `--target-hz`)
+- route exploratory-only behavior through `of_experimental.py`, not through stable smoke/log/calibration flows
+
+### Experimental script boundary (`of_experimental.py`)
+
+`of_experimental.py` remains the sandbox for raw register and probing workflows.
+
+Retention policy:
+
+- keep: `probe`, `burst`, `frame`, `register-read`, `led-tune`, `led-sweep` (or equivalent raw/experimental paths)
+- move/remove: wrappers that duplicate stable functions already covered in dedicated scripts
+
+### Planned LED feedback linearization
+
+The current visual LED response is non-linear, so final user-facing brightness control should become LUT-based.
+
+Planned path:
+
+1. Use Maker Pi ADC + LDR to sample visible brightness during LED sweep.
+2. Build brightness compensation LUT from measured response.
+3. Store LUT in config/profile and apply during calibration and optional runtime modes.
+4. Keep raw linear mode available for diagnostics.
+
+### Planned Neopixel ring integration
+
+- use the ring as optional external illumination control during calibration and stream tests
+- define repeatable light presets to reduce ambient variability in optical-flow experiments
+- keep ring control decoupled so sensor smoke tests still run without ring hardware
+
 Examples:
 
 ```bash

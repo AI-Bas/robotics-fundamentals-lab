@@ -41,6 +41,11 @@ python src/of_sensor_smoke.py --samples 4
 ## 6) Backlog Pointer
 
 - Link to longer-term docs/issues instead of expanding details here.
+- Include these references when relevant:
+  - `docs/project-todo.md`
+  - `docs/ball-rotation-architecture.md`
+  - `docs/modules/<module-name>.md`
+  - `docs/conventions.md`
 
 ---
 
