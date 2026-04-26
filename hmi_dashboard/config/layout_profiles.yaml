@@ -1,0 +1,31 @@
+default_profile: "configuration"
+
+profiles:
+  configuration:
+    page_title: "Configuration"
+    sections:
+      - "system_overview"
+      - "network_settings"
+      - "module_toggles"
+      - "save_profile"
+  calibration:
+    page_title: "Calibration"
+    sections:
+      - "sensor_selection"
+      - "calibration_steps"
+      - "live_graphs"
+      - "results_export"
+  run_modes:
+    page_title: "Run Modes"
+    sections:
+      - "mode_selection"
+      - "runtime_controls"
+      - "health_status"
+      - "event_log"
+  modular_io_toolkit:
+    page_title: "Modular I/O Toolkit"
+    sections:
+      - "io_device_scan"
+      - "serial_console"
+      - "pin_map"
+      - "io_actions"

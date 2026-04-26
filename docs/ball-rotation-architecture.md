@@ -71,10 +71,17 @@ This order prioritizes sensor reliability and safety observability before full c
 - stream encoder/state/fault telemetry and accept runtime parameter updates
 - enforce driver-level safety and participate in global fault arbitration
 
-### 4.6 Integration Module (`ros2_hmi`)
+### 4.6 ROS2 Core Module (`ros2_core`)
 
 - define and host the full ROS2 graph contracts
+- manage launch profiles, integration sequencing, and diagnostics rollup
+- provide backend-facing transport boundaries for HMI and operators
+- keep module interface contracts explicit and versionable
+
+### 4.7 HMI Dashboard Module (`hmi_dashboard`)
+
 - provide local touchscreen operator interface and remote browser mirror
+- expose task-specific layouts (configuration, calibration, run mode, modular I/O)
 - aggregate diagnostics, logs, and trend views across all modules
 - support profile/preset-based operation modes
 

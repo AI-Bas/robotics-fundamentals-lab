@@ -12,7 +12,9 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
 - Camera and AI: `docs/modules/camera-ai.md`
 - Modular I/O: `docs/modules/modular-io.md`
 - Motor control: `docs/modules/motor-control.md`
-- ROS2 and HMI integration: `docs/modules/ros2-hmi-integration.md`
+- Raspberry Pi 4 platform: `docs/modules/rpi4-platform.md`
+- HMI dashboard: `docs/modules/hmi-dashboard.md`
+- ROS2 core integration: `docs/modules/ros2-core.md`
 - Shared conventions: `docs/conventions.md`
 
 ## Status Legend
@@ -76,7 +78,21 @@ Planning snapshots and imported plans live in `docs/planning/`, but long-term up
 - `todo` Define safety-state handling: estop, overvoltage, faults, brownout recovery.
 - `todo` Define runtime parameter tuning surface (PID, setpoints, limits).
 
-### ROS2 and HMI Integration (Priority 6)
+### Raspberry Pi 4 Platform (Priority 6)
+
+- `doing` Consolidate board-specific setup and monitoring scripts in `rpi4_platform/src`.
+- `todo` Validate PWM fan control path and map final pin/header routing.
+- `todo` Validate Hailo AI HAT status detection and runtime checks.
+- `todo` Capture known-good platform baseline report (OS, kernel, packages, interfaces).
+
+### HMI Dashboard (Priority 7)
+
+- `doing` Expand Streamlit scaffold toward live module telemetry views.
+- `todo` Add configuration save/load workflows tied to profile files.
+- `todo` Define calibration page contracts with optical_flow and power_monitor outputs.
+- `todo` Add kiosk auto-start workflow for HDMI touchscreen deployment.
+
+### ROS2 Core Integration (Priority 8)
 
 - `todo` Define node boundaries and topic/service contracts across modules.
 - `todo` Define profile and preset management strategy.

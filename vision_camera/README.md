@@ -13,3 +13,8 @@ Development area for Raspberry Pi global shutter camera + AI HAT+ experiments.
 
 - `src/cam_smoke.py`
 - `src/cam_experimental.py`
+
+## Documentation
+
+- Module-local hardware/source references: `vision_camera_documentation/vision-camera-documentation.md`
+- Architecture source of truth: `../docs/modules/camera-ai.md`

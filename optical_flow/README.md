@@ -273,6 +273,11 @@ python src/of_main.py graph --log-dir logs --out-dir logs/plots
 Key CSV/JSON outputs are produced by diagnostics and wrappers in `logs/`.
 For tracked references, see `optical_flow/log_examples/`.
 
+## Documentation
+
+- Module-local hardware/source references: `optical_flow_documentation/optical-flow-documentation.md`
+- Architecture source of truth: `../docs/modules/optical-flow.md`
+
 ## Minimal Unit Tests (Development Practice)
 
 Unit tests here focus on pure logic and mocked sensor behavior, not hardware timing:

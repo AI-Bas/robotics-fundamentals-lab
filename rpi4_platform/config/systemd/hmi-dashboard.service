@@ -1,0 +1,17 @@
+[Unit]
+Description=Robotics HMI Dashboard Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=s3p
+WorkingDirectory=/home/s3p/robotics-fundamentals-lab
+ExecStart=/home/s3p/robotics-fundamentals-lab/scripts/bootstrap/run_hmi_dashboard.sh
+Restart=on-failure
+RestartSec=5
+Environment=HMI_HOST=0.0.0.0
+Environment=HMI_PORT=8501
+
+[Install]
+WantedBy=multi-user.target

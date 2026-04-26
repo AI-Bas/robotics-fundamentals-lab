@@ -16,6 +16,9 @@ Use this file as the authoritative reference for naming, layout, logging, and do
 - Markdown filenames: `kebab-case.md`
 - C++ files: `snake_case.cpp` and `snake_case.hpp`
 - C++ classes/types: `PascalCase`
+- Documentation folders: `<module_name>_documentation`
+- Nested documentation folders: `<module_name>_<topic>`
+- Module documentation summary markdown: `<module-name>-documentation.md`
 
 ## Directory Conventions
 
@@ -26,6 +29,9 @@ Expected top-level modules:
 - `vision_camera/`
 - `modular_io/`
 - `motor_control/`
+- `rpi4_platform/`
+- `hmi_dashboard/`
+- `ros2_core/`
 
 Each module should follow a similar structure when practical:
 
@@ -34,6 +40,7 @@ Each module should follow a similar structure when practical:
 - `logs/` runtime outputs (gitignored where appropriate)
 - `tests/` unit/integration tests
 - `README.md` module usage and quickstart
+- `<module_name>_documentation/` module-local external artifacts and source links (not architecture source of truth)
 
 ## Script Role Conventions
 
@@ -53,6 +60,8 @@ To keep scripts easy to scan, use a short module reference at the top of each sc
 - `Module: vision_camera`
 - `Module: modular_io`
 - `Module: motor_control`
+- `Module: hmi_dashboard`
+- `Module: ros2_core`
 
 Example first docstring lines:
 
@@ -95,11 +104,66 @@ Top-level docs under `docs/` should include:
 - operator handoff and session restart rules
 - links to hardware references and external docs
 
+Module-local documentation folder rules:
+
+- each module keeps local source files under `<module_name>_documentation/`
+- each module summary file is `<module-name>-documentation.md`
+- summary markdown is an index/overview only
+- summary markdown should include:
+  - module components quick reference
+  - source URL quick links
+  - latest status snapshot
+- detailed files of varying types (PDF/CAD/images/examples/notes) go into module-prefixed subfolders
+- system architecture, module behavior, and inter-module integration remain source-of-truth in `docs/`
+
 ## Commenting and Readability
 
 - prefer self-explanatory code and concise function names
 - add short comments only where behavior is non-obvious
 - for CLI entrypoints, include compact usage examples in docstrings or README
+- prefer explicit, readable names over overly short acronyms
+- keep functions small and reusable with one clear responsibility
+
+## Function Docstring And Type Conventions
+
+Python:
+
+- every function should include a short docstring
+- docstring should briefly state purpose, inputs, and outputs
+- add explicit type hints for parameters and return types where practical
+- use `Optional[...]`, `dict[str, ...]`, and typed tuples/dataclasses where they improve debugging clarity
+
+C++:
+
+- public APIs and non-trivial functions should have concise Doxygen-style comments
+- include parameter and return intent where not obvious
+- prefer explicit types and avoid ambiguous implicit conversions in critical code paths
+
+Docstring goal:
+
+- improve hover/completion hints in the IDE
+- make function contracts visible without opening implementation details
+
+## Error Handling And Troubleshooting Conventions
+
+- use `try`/`except` around hardware I/O, parsing, and external dependency calls where failure is expected
+- include concise comments explaining likely failure causes and recovery intent
+- avoid broad exception swallowing; log or surface actionable error context
+- prefer specific exception classes over generic `Exception` when possible
+- keep troubleshooting notes synchronized with `docs/project-todo.md` when new recurring failure modes appear
+
+## Tooling Baseline (Python And C++)
+
+Current repository baseline:
+
+- no repository-level VS Code/Cursor settings were found under `.vscode/`
+- no repository-level `pyproject.toml`, `mypy.ini`, `CMakeLists.txt`, `.clang-tidy`, or `.clang-format` were found
+
+Recommended editor tooling:
+
+- Python: Pylance + Pyright diagnostics, Ruff, and MyPy (strictness can be phased in)
+- C++: `clangd` or Microsoft C/C++ extension, plus `clang-tidy` for static analysis
+- formatting: Black (Python) and `clang-format` (C++)
 
 ## Validation Conventions
 

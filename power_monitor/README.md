@@ -53,3 +53,8 @@ All scripts use:
 - logging script records voltage/current/power and threshold events
 - graph script visualizes trends and fault windows
 - ROS2 contract includes telemetry fields, units, and fault states
+
+## Documentation
+
+- Module-local hardware/source references: `power_monitor_documentation/power-monitor-documentation.md`
+- Architecture source of truth: `../docs/modules/power-monitor.md`

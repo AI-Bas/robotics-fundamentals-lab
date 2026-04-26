@@ -64,3 +64,15 @@ Long-term planning must live in the canonical docs (`architecture`, `project-tod
 - Avoid creating new top-level planning docs when an existing source-of-truth file already fits.
 - Consolidate old one-off plans into architecture, module docs, or project todo and then retire the redundant doc.
 - Keep `docs/planning/` for imported or milestone snapshots only.
+
+## Cross-Reference And Status Rule
+
+- When updating a module, update both:
+  - architecture/module planning docs under `docs/`
+  - the module summary index under `<module>/<module>_documentation/<module>-documentation.md`
+- Module summary indexes should include:
+  - component quick reference
+  - source URL quick links
+  - latest status snapshot (`todo`/`doing`/`blocked`/`done`)
+- Source-of-truth precedence remains unchanged: `docs/` is authoritative when conflicts appear.
+- Local module documentation folders should be checked for new vendor files whenever work is requested on that module.

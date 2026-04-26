@@ -16,11 +16,45 @@ Monorepo for small, practical robotics experiments with a Raspberry Pi, focused 
 - Keep this workspace organized as a monorepo of small experiments.
 - Commit often locally, push at meaningful milestones.
 
+## Optional Bootstrap Workflow
+
+Use these scripts to get a consistent environment after SSH login on a fresh board.
+
+1. workspace normalization and module venv setup:
+
+```bash
+./scripts/bootstrap/bootstrap_workspace.sh
+```
+
+1. board bootstrap (dry-run first, then apply):
+
+```bash
+./scripts/bootstrap/bootstrap_rpi_headless.sh --dry-run
+./scripts/bootstrap/bootstrap_rpi_headless.sh --apply --profile config/platforms/rpi_debian.env
+```
+
+Optional dev tooling bootstrap (PEP 668 safe):
+
+```bash
+./scripts/bootstrap/bootstrap_dev_tools.sh
+```
+
+Design references:
+
+- `docs/setup/bootstrap-and-tooling-baseline.md`
+- `config/platforms/generic_linux.env`
+- `config/platforms/rpi_debian.env`
+
+This workflow is optional; contributors can still use custom local setups.
+
 ## Suggested Monorepo Structure
 
 - `optical_flow/`
 - `imu/`
 - `motor_control/`
+- `rpi4_platform/`
+- `hmi_dashboard/`
+- `ros2_core/`
 - `common/`
 - `docs/`
 
@@ -50,6 +84,14 @@ Recommended clone location for consistency on fresh Pi:
 git clone git@github.com:AI-Bas/robotics-fundamentals-lab.git ~/robotics-fundamentals-lab
 ```
 
+If you clone into a different path, run:
+
+```bash
+./scripts/bootstrap/bootstrap_workspace.sh
+```
+
+This creates a stable symlink at `~/robotics-fundamentals-lab` when possible.
+
 The helper script auto-detects repo root from your current directory, so it is safe even if folder names differ.
 
 Optional arguments:
@@ -78,6 +120,7 @@ git log --oneline -5
 ```
 
 Tips:
+
 - use `git add -p` to stage only the exact hunks you want
 - keep commits small and focused (easier rollback/review)
 - push at checkpoints, not every save
@@ -103,10 +146,12 @@ python -m pip install -r requirements.txt
 ```
 
 During development:
+
 - pin critical/runtime-sensitive packages with minimum ranges if needed
 - allow less-critical tooling to float (faster iteration)
 
 At milestone or release:
+
 - freeze exact versions for reproducibility:
 
 ```bash
@@ -114,6 +159,7 @@ python -m pip freeze > requirements-lock.txt
 ```
 
 Recommended pattern for your roadmap (ROS2 + OpenCV + AI accelerator):
+
 - keep `requirements.txt` human-curated for intent
 - maintain `requirements-lock.txt` for reproducible milestone snapshots
 - refresh lock file at each stable milestone
@@ -121,6 +167,7 @@ Recommended pattern for your roadmap (ROS2 + OpenCV + AI accelerator):
 ## Remote Access and Network Diagnostics
 
 If Pi internet works on phone hotspot but not home Wi-Fi, likely causes are router/AP policies:
+
 - client isolation (Wi-Fi clients blocked from LAN peers)
 - DHCP/DNS mismatch
 - firewall or subnet separation
@@ -137,12 +184,13 @@ ping -c 3 github.com
 ```
 
 Quick checks on controlling machine:
+
 - confirm both devices are on same subnet when using Wi-Fi directly
 - test `ssh <pi-user>@<pi-ip>` by IP first (not hostname)
 - if hostname fails but IP works, fix mDNS/DNS resolution
 
 For stable sessions:
+
 - use `tmux` on Pi (`tmux new -s robotics`)
 - reconnect with `tmux attach -t robotics`
 - keep one terminal for runtime logs and one for Git/edits
-

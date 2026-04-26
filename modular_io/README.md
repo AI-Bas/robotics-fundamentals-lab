@@ -13,3 +13,8 @@ Development area for Maker Pi USB coprocessor experiments (sensors, buttons, OLE
 
 - `src/io_smoke.py`
 - `src/io_experimental.py`
+
+## Documentation
+
+- Module-local hardware/source references: `modular_io_documentation/modular-io-documentation.md`
+- Architecture source of truth: `../docs/modules/modular-io.md`

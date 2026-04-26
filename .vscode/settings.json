@@ -1,0 +1,19 @@
+{
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.inlayHints.variableTypes": true,
+  "python.analysis.inlayHints.functionReturnTypes": true,
+  "python.analysis.autoImportCompletions": true,
+  "python.languageServer": "None",
+  "editor.formatOnSave": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "ruff.enable": true,
+  "C_Cpp.intelliSenseEngine": "default",
+  "clangd.arguments": [
+    "--background-index",
+    "--clang-tidy"
+  ]
+}

@@ -13,3 +13,8 @@ Development area for RoboClaw interfaces and high-rate control integration.
 
 - `src/` for implementation
 - `docs/` for wiring and protocol notes
+
+## Documentation
+
+- Module-local hardware/source references: `motor_control_documentation/motor-control-documentation.md`
+- Architecture source of truth: `../docs/modules/motor-control.md`
