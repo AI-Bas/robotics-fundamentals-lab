@@ -3,7 +3,7 @@
 ## Snapshot
 
 - Branch: `main`
-- Sync: validated locally; push `main` after this handoff update
+- Sync: local `main` matches `origin/main` after validation push
 - Primary focus: clean canonical repo/network starting point
 - Last validated command: `ssh -T github-robotics-fundamentals-lab`
 - Blocking issue: none observed
@@ -31,7 +31,7 @@
   - `ssh -T github-robotics-fundamentals-lab`
 - Observed:
   - canonical folder exists; old alias/misspelled paths do not exist
-  - repo is on `main` with no uncommitted changes before this handoff refresh
+  - repo is on `main` and clean after the validation push
   - gateway, DNS, internet, and GitHub SSH authentication succeeded
 - Confidence: high for repo/path/internet checks; medium for physical router mode because that requires router UI or throughput testing
 
