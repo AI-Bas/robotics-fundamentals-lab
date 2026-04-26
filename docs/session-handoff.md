@@ -3,57 +3,39 @@
 ## Snapshot
 
 - Branch: `main`
-- Sync: local `main` matches `origin/main` after validation push
-- Primary focus: clean canonical repo/network starting point
-- Last validated command: `ssh -T github-robotics-fundamentals-lab`
-- Blocking issue: none observed
+- Sync: local `main` includes new bootstrap/platform commit(s) and is pushed
+- Primary focus: verified Raspberry Pi bootstrap + storage recovery + fan/header automation
+- Blocking issue: ROS2 apt package unavailable without adding official ROS2 repository
 
 ## Current State
 
-- **Done**
-  - Canonical repo path confirmed: `~/robotics-fundamentals-lab`.
-  - Alias symlinks removed: `~/robotics` and `~/robotics-fundementals-lab`.
-  - Project docs consolidated (`architecture`, `project-todo`, `conventions`, module docs).
-  - Stale `~/robotics/optical_flow` README reference corrected to the canonical path.
-  - Pi network verified on `eth0` (`192.168.1.207`) and `wlan0` (`192.168.1.208`) in the same subnet.
-- **In progress**
-  - Continue module implementation from the canonical workspace.
-- **Not started**
-  - Hardware-level Linksys throughput/AP-mode validation, if needed.
+- Platform bootstrap dry-runs pass (`rpi4_setup_local`, `bootstrap_rpi_headless`, HMI service installer).
+- Dedicated fan header is confirmed functional via `hwmon` (`pwmfan`, `fan1_input` responds to PWM).
+- Fan mode can be toggled and now is automated to `auto` in bootstrap (`rpi4_fan_mode.py --mode auto`).
+- Optional desktop cleanup succeeded; root filesystem improved to about `3.8-3.9G` free on 16GB card.
+- Maker Pi RP2040 is detected on USB (`2e8a:1000`) and exposes `/dev/ttyACM0`.
+- CIRCUITPY storage is visible as `/dev/sda1` (label `CIRCUITPY`), mountable and editable (`code.py` confirmed).
+- Inventory snapshot script writes `rpi4_platform/config/rpi4_device_inventory.json`.
 
-## Validation
+## Validation Commands
 
-- Commands:
-  - `git status --short --branch`
-  - `ls -ld /home/s3p/robotics-fundamentals-lab /home/s3p/robotics /home/s3p/robotics-fundementals-lab`
-  - `rg "~/robotics/|/home/s3p/robotics/|robotics-fundementals|fundementals"`
-  - `ping -c 2 192.168.1.1 && ping -c 2 1.1.1.1 && ping -c 2 github.com`
-  - `ssh -T github-robotics-fundamentals-lab`
-- Observed:
-  - canonical folder exists; old alias/misspelled paths do not exist
-  - repo is on `main` and clean after the validation push
-  - gateway, DNS, internet, and GitHub SSH authentication succeeded
-- Confidence: high for repo/path/internet checks; medium for physical router mode because that requires router UI or throughput testing
+- `python3 rpi4_platform/src/rpi4_status.py --summary-only`
+- `sudo python3 rpi4_platform/src/rpi4_fan_mode.py --mode show`
+- `sudo python3 rpi4_platform/src/rpi4_fan_header_smoke.py --step-seconds 2`
+- `python3 rpi4_platform/src/rpi4_inventory_snapshot.py`
+- `lsusb && lsblk -o NAME,SIZE,FSTYPE,LABEL,MOUNTPOINT`
 
 ## Next Action
 
 ```bash
 cd ~/robotics-fundamentals-lab
 git status -sb
-cd optical_flow
-source .venv/bin/activate
+python3 rpi4_platform/src/rpi4_inventory_snapshot.py
+sudo python3 rpi4_platform/src/rpi4_fan_mode.py --mode show
 ```
 
 ## Risks / Assumptions
 
-- Current Pi routes prefer `eth0` over `wlan0`; keep that if Ethernet should be primary.
-- Linksys E1200 appears not to create a separate subnet for the Pi, but AP/bridge mode should be confirmed in its admin UI.
-
-## Process Rules
-
-- Use concise handoff format from `docs/session-handoff-template.md`.
-- Follow general workflow standards in `docs/workflow-rules.md`.
-- Track medium/long-term work in `docs/project-todo.md`.
-- Follow system targets in `docs/ball-rotation-architecture.md`.
-- Follow naming and structure from `docs/conventions.md`.
-
+- Module name `rpi4_platform` remains while host identifies `BCM2712`; naming refactor may be needed later.
+- ROS2 install remains deferred until proper apt repository/key setup is added.
+- Keep using venv-based Python tooling to avoid PEP 668/system Python conflicts.

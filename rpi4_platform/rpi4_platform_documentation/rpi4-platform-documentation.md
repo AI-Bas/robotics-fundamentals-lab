@@ -44,6 +44,7 @@ The `rpi4_platform` module captures board-specific setup and lifecycle managemen
 - Backlog tracking: `docs/project-todo.md` (platform orchestration items)
 - Observed hardware note: system reports `BCM2712` in live status logs; verify whether deployed board is Pi 5-class platform while this module naming is currently `rpi4_platform`.
 - Current fan mode target: set dedicated fan header to `auto` during bootstrap (`pwm1_enable=2`).
+- Device inventory snapshot path: `rpi4_platform/config/rpi4_device_inventory.json`.
 
 ## Cross-Reference Workflow
 

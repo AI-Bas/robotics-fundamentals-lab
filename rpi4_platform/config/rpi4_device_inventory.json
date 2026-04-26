@@ -1,0 +1,55 @@
+{
+  "host": {
+    "hostname": "raspberrypi4",
+    "kernel": "6.12.75+rpt-rpi-2712"
+  },
+  "interfaces": {
+    "i2c_devices": [
+      "/dev/i2c-1",
+      "/dev/i2c-13",
+      "/dev/i2c-14"
+    ],
+    "network_brief": "lo               UNKNOWN        127.0.0.1/8 ::1/128 \neth0             UP             192.168.1.207/24 fe80::fb4c:cd36:98aa:825a/64 \nwlan0            UP             192.168.1.208/24 fe80::a07a:fb42:7391:69db/64",
+    "serial_devices": [
+      "/dev/ttyACM0"
+    ],
+    "spi_devices": [
+      "/dev/spidev0.0",
+      "/dev/spidev0.1",
+      "/dev/spidev10.0"
+    ]
+  },
+  "last_checked_utc": "2026-04-26T18:50:04.567905+00:00",
+  "module_links": {
+    "modular_io_usb_present": true,
+    "optical_flow_spi_present": true,
+    "power_monitor_i2c_present": true,
+    "ros2_cli_present": false
+  },
+  "storage": {
+    "circuitpython_mount_candidates": [
+      "/media/s3p",
+      "/media",
+      "/mnt"
+    ],
+    "lsblk": "NAME         SIZE FSTYPE LABEL     MOUNTPOINT\nsda            1M                  \n\u2514\u2500sda1         1M vfat   CIRCUITPY \nmmcblk0     14.8G                  \n\u251c\u2500mmcblk0p1  512M vfat   bootfs    /boot/firmware\n\u2514\u2500mmcblk0p2 14.3G ext4   rootfs    /"
+  },
+  "usb": {
+    "lsusb_raw": [
+      "Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub",
+      "Bus 003 Device 002: ID 1d57:fa21 Xenta 2.4G Receiver",
+      "Bus 003 Device 003: ID 2e8a:1000 Cytron Maker Pi RP2040",
+      "Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub",
+      "Bus 002 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub",
+      "Bus 001 Device 003: ID 413c:2003 Dell Computer Corp. Keyboard SK-8115",
+      "Bus 001 Device 002: ID 27c0:0859 Cadwell Laboratories, Inc. TouchScreen",
+      "Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub"
+    ],
+    "maker_pi_rp2040": {
+      "detected": true,
+      "usb_entries": [
+        "Bus 003 Device 003: ID 2e8a:1000 Cytron Maker Pi RP2040"
+      ]
+    }
+  }
+}

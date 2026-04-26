@@ -27,6 +27,7 @@ Development area for board/platform-specific setup, runtime provisioning, and in
 - `src/rpi4_fan_header_smoke.py` dedicated 4-pin fan header smoke via hwmon
 - `src/rpi4_cleanup_optional_desktop.sh` optional purge of non-project desktop apps for headless use
 - `src/rpi4_install_hmi_service.sh` install/enable HMI systemd service
+- `src/rpi4_inventory_snapshot.py` capture connected-device/interface inventory into config
 
 ## Quick Start
 
@@ -49,6 +50,9 @@ python3 rpi4_platform/src/rpi4_fan_smoke.py --gpio-pin 18 --step-seconds 2
 # dedicated fan header smoke (requires sudo for hwmon writes)
 sudo python3 rpi4_platform/src/rpi4_fan_header_smoke.py --step-seconds 2
 
+# inventory snapshot (writes rpi4_platform/config/rpi4_device_inventory.json)
+python3 rpi4_platform/src/rpi4_inventory_snapshot.py
+
 # optional headless cleanup preview then apply
 ./rpi4_platform/src/rpi4_cleanup_optional_desktop.sh --dry-run
 ./rpi4_platform/src/rpi4_cleanup_optional_desktop.sh --apply
@@ -63,6 +67,7 @@ Note:
 - If your board reports `BCM2712` and exposes dedicated fan hwmon entries, use `rpi4_fan_header_smoke.py` as the primary fan test.
 - `rpi4_fan_smoke.py` is for GPIO PWM fan wiring and may not affect dedicated fan-header control.
 - Headless mode still allows local HDMI + keyboard terminal access unless you explicitly configure kiosk-only autologin behavior.
+- Maker Pi RP2040 CircuitPython workflow is available when the `CIRCUITPY` mass-storage volume is mounted (for example `/mnt/circuitpy`).
 
 ## Documentation
 
