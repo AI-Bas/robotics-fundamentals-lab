@@ -73,6 +73,9 @@ Note:
 - `rpi4_fan_smoke.py` is for GPIO PWM fan wiring and may not affect dedicated fan-header control.
 - Headless mode still allows local HDMI + keyboard terminal access unless you explicitly configure kiosk-only autologin behavior.
 - Maker Pi RP2040 CircuitPython workflow is available when the `CIRCUITPY` mass-storage volume is mounted (for example `/mnt/circuitpy`).
+- CircuitPython entrypoint is `code.py`; this is the file that auto-runs after save/reload on the board.
+- Keep reusable helper modules under CIRCUITPY `lib/`, but execution should be routed from `code.py`.
+- Red import diagnostics in host IDE are expected when analyzing CircuitPython-only modules on Linux host Python.
 - Open `robotics-fundamentals-lab.code-workspace` for a one-click layout including repository + mounted CIRCUITPY drive.
 
 ## Documentation

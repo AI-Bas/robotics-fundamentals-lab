@@ -55,6 +55,7 @@ Additionally, this repository provides a workspace bootstrap script that can cre
 - `rpi4_platform/src/rpi4_install_hmi_service.sh`
 - `rpi4_platform/src/rpi4_mount_circuitpy.sh`
 - `robotics-fundamentals-lab.code-workspace`
+- `docs/setup/cursor-extensions-reference.md`
 - `config/platforms/generic_linux.env`
 - `config/platforms/rpi_debian.env`
 - `.vscode/extensions.json`
