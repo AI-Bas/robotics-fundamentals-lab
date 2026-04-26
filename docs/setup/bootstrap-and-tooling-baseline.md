@@ -53,6 +53,8 @@ Additionally, this repository provides a workspace bootstrap script that can cre
 - `scripts/bootstrap/bootstrap_rpi_headless.sh`
 - `rpi4_platform/src/rpi4_setup_local.sh`
 - `rpi4_platform/src/rpi4_install_hmi_service.sh`
+- `rpi4_platform/src/rpi4_mount_circuitpy.sh`
+- `robotics-fundamentals-lab.code-workspace`
 - `config/platforms/generic_linux.env`
 - `config/platforms/rpi_debian.env`
 - `.vscode/extensions.json`
@@ -77,6 +79,25 @@ This keeps module code mostly stable while platform bring-up stays configurable.
 5. run board bootstrap script in `--apply`
 6. validate interfaces and runtime with module smoke tests
 7. run board-specific checks (for example `rpi4_platform/src/rpi4_status.py`)
+
+## Workspace Persistence (One-Click Open)
+
+Use the repository workspace file to reopen both:
+
+- project repository
+- mounted Maker Pi CIRCUITPY storage
+
+Workflow:
+
+1. mount/link CIRCUITPY:
+
+```bash
+./rpi4_platform/src/rpi4_mount_circuitpy.sh --apply
+```
+
+1. open `robotics-fundamentals-lab.code-workspace`
+
+This keeps CircuitPython files editable from the same workspace after SSH reconnects.
 
 ## Tooling Baseline Details
 

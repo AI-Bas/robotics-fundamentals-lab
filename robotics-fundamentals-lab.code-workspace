@@ -1,0 +1,16 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "name": "CIRCUITPY",
+      "path": "mounts/circuitpy"
+    }
+  ],
+  "settings": {
+    "files.watcherExclude": {
+      "**/.git/objects/**": true
+    }
+  }
+}
