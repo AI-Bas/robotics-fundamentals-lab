@@ -205,7 +205,7 @@ python src/of_main.py graph --log-dir logs --out-dir logs/plots
 
 # remote SSH shell (same commands after ssh login and venv activate)
 ssh <user>@<pi-host>
-cd ~/robotics/optical_flow
+cd ~/robotics-fundamentals-lab/optical_flow
 source .venv/bin/activate
 python src/of_main.py smoke --samples 10
 ```

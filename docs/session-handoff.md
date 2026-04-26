@@ -3,10 +3,10 @@
 ## Snapshot
 
 - Branch: `main`
-- Sync: ahead of `origin/main` by 1 local commit (`78712d8`)
-- Primary focus: docs architecture consolidation and canonical path cleanup
-- Last validated command: `git -C ~/robotics-fundamentals-lab status -sb`
-- Blocking issue: prior workspace path was symlink-based and is now removed
+- Sync: validated locally; push `main` after this handoff update
+- Primary focus: clean canonical repo/network starting point
+- Last validated command: `ssh -T github-robotics-fundamentals-lab`
+- Blocking issue: none observed
 
 ## Current State
 
@@ -14,36 +14,40 @@
   - Canonical repo path confirmed: `~/robotics-fundamentals-lab`.
   - Alias symlinks removed: `~/robotics` and `~/robotics-fundementals-lab`.
   - Project docs consolidated (`architecture`, `project-todo`, `conventions`, module docs).
-  - Safety commit created on `main`: `78712d8`.
+  - Stale `~/robotics/optical_flow` README reference corrected to the canonical path.
+  - Pi network verified on `eth0` (`192.168.1.207`) and `wlan0` (`192.168.1.208`) in the same subnet.
 - **In progress**
-  - Reopen Cursor workspace against canonical path and continue module implementation.
+  - Continue module implementation from the canonical workspace.
 - **Not started**
-  - Push local commit to remote (optional, pending user confirmation).
+  - Hardware-level Linksys throughput/AP-mode validation, if needed.
 
 ## Validation
 
 - Commands:
-  - `pwd`
-  - `ls -ld /home/s3p/robotics-fundamentals-lab /home/s3p/robotics`
-  - `git -C /home/s3p/robotics-fundamentals-lab status -sb`
+  - `git status --short --branch`
+  - `ls -ld /home/s3p/robotics-fundamentals-lab /home/s3p/robotics /home/s3p/robotics-fundementals-lab`
+  - `rg "~/robotics/|/home/s3p/robotics/|robotics-fundementals|fundementals"`
+  - `ping -c 2 192.168.1.1 && ping -c 2 1.1.1.1 && ping -c 2 github.com`
+  - `ssh -T github-robotics-fundamentals-lab`
 - Observed:
-  - canonical folder exists and is the only repository directory
-  - `/home/s3p/robotics` no longer exists
-  - repo is clean and ahead by 1 commit
-- Confidence: high (path and repo state verified directly)
+  - canonical folder exists; old alias/misspelled paths do not exist
+  - repo is on `main` with no uncommitted changes before this handoff refresh
+  - gateway, DNS, internet, and GitHub SSH authentication succeeded
+- Confidence: high for repo/path/internet checks; medium for physical router mode because that requires router UI or throughput testing
 
 ## Next Action
 
 ```bash
 cd ~/robotics-fundamentals-lab
 git status -sb
-# reopen Cursor in this folder as the only workspace root
+cd optical_flow
+source .venv/bin/activate
 ```
 
 ## Risks / Assumptions
 
-- Cursor workspace label may still show old naming until reopened from canonical path.
-- Local commit is not on remote yet.
+- Current Pi routes prefer `eth0` over `wlan0`; keep that if Ethernet should be primary.
+- Linksys E1200 appears not to create a separate subnet for the Pi, but AP/bridge mode should be confirmed in its admin UI.
 
 ## Process Rules
 
